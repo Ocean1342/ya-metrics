@@ -15,8 +15,16 @@ type UpdateRequest struct {
 	Value string
 }
 
-func NewUpdateHandler(amt mdata.AvailableMetricsTypes) *UpdateHandler {
-	return &UpdateHandler{AvailableMetricsTypes: amt}
+func NewUpdateHandler(
+	amt mdata.AvailableMetricsTypes,
+	gaugeStorage server_storage.GaugeStorage,
+	countStorage server_storage.CounterStorage,
+) *UpdateHandler {
+	return &UpdateHandler{
+		AvailableMetricsTypes: amt,
+		gaugeStorage:          gaugeStorage,
+		countStorage:          countStorage,
+	}
 }
 
 type UpdateHandler struct {
@@ -25,48 +33,54 @@ type UpdateHandler struct {
 	countStorage          server_storage.CounterStorage
 }
 
-func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, request *http.Request) {
-	ur, err := uh.updateRequestPrepare(request.URL.Path)
+func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, req *http.Request) {
+	if req.Method != http.MethodPost {
+		http.Error(writer, "Only POST method is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	err := uh.validateRequestHeader(req)
 	if err != nil {
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
-	if err = uh.updateRequestValidateTypeName(ur); err != nil {
+	ur, err := uh.updateRequestPrepare(req.URL.Path)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
+	}
+	if err = uh.validateUpdateRequest(ur); err != nil {
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
-	//TODO: вынести в отдельную функцию сохранение метрики
-	switch ur.Type {
-	case mdata.COUNT:
-		val, err := strconv.ParseInt(ur.Value, 10, 64)
-		if err != nil {
-			http.Error(writer, "invalid value for gauge", http.StatusBadRequest)
-			return
-		}
-		err = uh.countStorage.Set(mdata.InitSimpleCounter(ur.Name, val))
-		if err != nil {
-			http.Error(writer, "invalid value for gauge", http.StatusBadRequest)
-			return
-		}
-	case mdata.GAUGE:
-		_, err := strconv.ParseFloat(ur.Value, 64)
-		if err != nil {
-			http.Error(writer, "invalid value for gauge", http.StatusBadRequest)
-			return
-		}
-		uh.gaugeStorage.Get(ur.Name)
+	err = uh.saveData(ur)
+	if err != nil {
+		http.Error(writer, err.Error(), http.StatusBadRequest)
+		return
 	}
 
 }
 
-func (uh *UpdateHandler) updateRequestValidateTypeName(ur *UpdateRequest) error {
-	if !uh.AvailableMetricsTypes.Isset(ur.Type) {
-		return fmt.Errorf("no available metrics type found")
+func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
+	switch ur.Type {
+	case mdata.COUNT:
+		val, err := strconv.ParseInt(ur.Value, 10, 64)
+		if err != nil {
+			return fmt.Errorf("invalid value for gauge")
+		}
+		err = uh.countStorage.Set(mdata.InitSimpleCounter(ur.Name, val))
+		if err != nil {
+			return fmt.Errorf("could not save data in storage")
+		}
+	case mdata.GAUGE:
+		_, err := strconv.ParseFloat(ur.Value, 64)
+		if err != nil {
+			return fmt.Errorf("invalid value for gauge")
+		}
+		uh.gaugeStorage.Get(ur.Name)
+	default:
+		return fmt.Errorf("undefined metric type")
 	}
-	//TODO: add validate name
-
-	//TODO: validate value?
 
 	return nil
 }

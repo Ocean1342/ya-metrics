@@ -19,7 +19,7 @@ type YaMetricsTypes struct {
 func InitMetrics() AvailableMetricsTypes {
 	list := make(map[int]string, 2)
 	list[0] = GAUGE
-	list[0] = COUNT
+	list[1] = COUNT
 	return &YaMetricsTypes{list: list}
 }
 func (ym YaMetricsTypes) Isset(typeName string) bool {
