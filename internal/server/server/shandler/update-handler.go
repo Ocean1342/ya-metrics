@@ -58,6 +58,9 @@ func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, req *http.Reques
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
+
+	writer.Header().Set("Content-Type", "text/plain")
+	writer.WriteHeader(http.StatusOK)
 }
 
 func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
