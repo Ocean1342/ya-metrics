@@ -5,20 +5,20 @@ type Counter interface {
 	GetName() string
 }
 type SimpleCounter struct {
-	value int64
-	name  string
+	Value int64
+	Name  string
 }
 
-func InitSimpleCounter(name string, value int64) *SimpleCounter {
+func NewSimpleCounter(name string, value int64) Counter {
 	return &SimpleCounter{
-		value: value,
-		name:  name,
+		Value: value,
+		Name:  name,
 	}
 }
 
 func (s *SimpleCounter) GetValue() int64 {
-	return s.value
+	return s.Value
 }
 func (s *SimpleCounter) GetName() string {
-	return s.name
+	return s.Name
 }

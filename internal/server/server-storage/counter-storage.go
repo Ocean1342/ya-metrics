@@ -5,20 +5,26 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type SimpleStorage struct {
+type SimpleCountStorage struct {
 	storage map[string]mdata.Counter
+	factory func(name string, value int64) mdata.Counter
 }
 
-func NewSimpleCountStorage() *SimpleStorage {
-	return &SimpleStorage{storage: make(map[string]mdata.Counter)}
+func NewSimpleCountStorage(factory func(name string, value int64) mdata.Counter) *SimpleCountStorage {
+	return &SimpleCountStorage{storage: make(map[string]mdata.Counter), factory: factory}
 }
 
-func (s *SimpleStorage) Set(m mdata.Counter) error {
-	s.storage[m.GetName()] = m
-	//TODO: бизнес логика сохранения?
+func (s *SimpleCountStorage) Set(m mdata.Counter) error {
+	el, ok := s.storage[m.GetName()]
+	if !ok {
+		s.storage[m.GetName()] = m
+		return nil
+	}
+	newVal := el.GetValue() + m.GetValue()
+	s.storage[m.GetName()] = s.factory(m.GetName(), newVal)
 	return nil
 }
 
-func (s *SimpleStorage) Get(name string) (mdata.Counter, error) {
+func (s *SimpleCountStorage) Get(name string) (mdata.Counter, error) {
 	return s.storage[strings.ToLower(name)], nil
 }

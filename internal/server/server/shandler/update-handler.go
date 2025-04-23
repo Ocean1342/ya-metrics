@@ -58,28 +58,30 @@ func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, req *http.Reques
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
-
 }
 
 func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
 	switch ur.Type {
-	case mdata.COUNT:
+	case mdata.COUNTER:
 		val, err := strconv.ParseInt(ur.Value, 10, 64)
 		if err != nil {
-			return fmt.Errorf("invalid value for gauge")
+			return fmt.Errorf("invalid value for %s", mdata.COUNTER)
 		}
-		err = uh.countStorage.Set(mdata.InitSimpleCounter(ur.Name, val))
+		err = uh.countStorage.Set(mdata.NewSimpleCounter(ur.Name, val))
 		if err != nil {
 			return fmt.Errorf("could not save data in storage")
 		}
 	case mdata.GAUGE:
-		_, err := strconv.ParseFloat(ur.Value, 64)
+		val, err := strconv.ParseFloat(ur.Value, 64)
 		if err != nil {
-			return fmt.Errorf("invalid value for gauge")
+			return fmt.Errorf("invalid value for %s", mdata.GAUGE)
 		}
-		uh.gaugeStorage.Get(ur.Name)
+		err = uh.gaugeStorage.Set(mdata.NewSimpleGauge(ur.Name, val))
+		if err != nil {
+			return fmt.Errorf("could not save %s data in storage", mdata.GAUGE)
+		}
 	default:
-		return fmt.Errorf("undefined metric type")
+		return fmt.Errorf("undefined metric type %s", ur.Type)
 	}
 
 	return nil
@@ -88,13 +90,13 @@ func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
 // TODO: разделить на две функции - препейрер и создание?
 func (uh *UpdateHandler) updateRequestPrepare(path string) (*UpdateRequest, error) {
 	parts := strings.Split(path, "/")
-	fmt.Println("len:", len(parts), cap(parts), parts)
 	if len(parts) != 5 {
 		return nil, fmt.Errorf("invalid path: %s", path)
 	}
-	ur := UpdateRequest{}
-	ur.Type = parts[2]
-	ur.Name = parts[3]
-	ur.Value = parts[4]
+	ur := UpdateRequest{
+		Type:  parts[2],
+		Name:  parts[3],
+		Value: parts[4],
+	}
 	return &ur, nil
 }

@@ -9,7 +9,6 @@ import (
 )
 
 func main() {
-	//TODO: вынести конфиг на энвы?
 	cfg := config.Config{
 		Port: 8080,
 		Host: "localhost",
@@ -18,7 +17,7 @@ func main() {
 	updateHandler := shandler.NewUpdateHandler(
 		mdata.InitMetrics(),
 		server_storage.NewSimpleGaugeStorage(),
-		server_storage.NewSimpleCountStorage(),
+		server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter),
 	)
 	routes := server.Routes{
 		"/update/{type}/{name}/{value}": updateHandler.HandlePost,
