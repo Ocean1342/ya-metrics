@@ -21,29 +21,29 @@ func main() {
 		for _, m := range mgen.GenerateGaugeMetrics() {
 			url := prepareUrlGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 			req, err := requestPrepare(url, http.MethodPost, buffer)
-			//TODO: убрать паники
+
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 
 			resp := sendRequest(req)
 			err = responseAnalyze(resp)
 			if err != nil {
-				panic(err)
+				fmt.Println(err)
 			}
 		}
 		pCount++
 		c := mdata.NewSimpleCounter("PollCount", pCount)
 		url := prepareUrlCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
 		req, err := requestPrepare(url, http.MethodPost, buffer)
-		//TODO: заменить паники на обработку ошибок
+		//TODO: добавить обработку ошибок
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
 		}
 		resp := sendRequest(req)
 		err = responseAnalyze(resp)
 		if err != nil {
-			panic(err)
+			fmt.Println(err)
 		}
 		//sleep
 		time.Sleep(time.Second * time.Duration(reportIntervalSec))
