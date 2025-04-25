@@ -13,7 +13,7 @@ import (
 func main() {
 	//TODO: вынести в конфиги
 	var pCount int64
-	srvrAddr := "http://localhost:8080"
+	srvrAddr := "https://localhost:8080"
 	reportIntervalSec := 10
 
 	for {
@@ -73,7 +73,8 @@ func sendRequest(req *http.Request) *http.Response {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		panic(err)
+		fmt.Println(err)
+		return nil
 	}
 	return resp
 }
