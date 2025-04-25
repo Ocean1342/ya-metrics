@@ -82,10 +82,13 @@ func sendRequest(req *http.Request) *http.Response {
 // TODO: доделать анализ ответа
 func responseAnalyze(resp *http.Response) error {
 	// Читаем ответ
+	if resp == nil {
+		return fmt.Errorf("nil response")
+	}
 	_, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
-		return fmt.Errorf("Error reading response")
+		return fmt.Errorf("error reading response")
 	}
 
 	fmt.Println("Response Status:", resp.Status)
