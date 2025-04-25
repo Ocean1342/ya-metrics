@@ -71,6 +71,7 @@ func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
 			return fmt.Errorf("invalid value for %s", mdata.COUNTER)
 		}
 		err = uh.countStorage.Set(mdata.NewSimpleCounter(ur.Name, val))
+		fmt.Println("Received: Counter", ur.Name, val)
 		if err != nil {
 			return fmt.Errorf("could not save data in storage")
 		}
@@ -80,6 +81,7 @@ func (uh *UpdateHandler) saveData(ur *UpdateRequest) error {
 			return fmt.Errorf("invalid value for %s", mdata.GAUGE)
 		}
 		err = uh.gaugeStorage.Set(mdata.NewSimpleGauge(ur.Name, val))
+		fmt.Println("Received: Gauge", ur.Name, val)
 		if err != nil {
 			return fmt.Errorf("could not save %s data in storage", mdata.GAUGE)
 		}
