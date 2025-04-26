@@ -2,7 +2,6 @@ package srvrstrg
 
 import (
 	"strconv"
-	"strings"
 	"ya-metrics/pkg/mdata"
 )
 
@@ -27,7 +26,7 @@ func (s *SimpleCountStorage) Set(m mdata.Counter) error {
 }
 
 func (s *SimpleCountStorage) Get(name string) (mdata.Counter, error) {
-	return s.storage[strings.ToLower(name)], nil
+	return s.storage[name], nil
 }
 
 func (s *SimpleCountStorage) GetList() map[string]string {

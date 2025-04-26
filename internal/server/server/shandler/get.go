@@ -53,7 +53,7 @@ func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 	}
 	if c != nil {
-		_, err := w.Write([]byte(fmt.Sprintf("%s:%v", c.GetName(), c.GetValue())))
+		_, err := w.Write([]byte(fmt.Sprintf("%v", c.GetValue())))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
