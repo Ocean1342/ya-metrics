@@ -3,22 +3,26 @@ package mdata
 type Counter interface {
 	GetValue() int64
 	GetName() string
+	GetType() string
 }
 type SimpleCounter struct {
-	Value int64
-	Name  string
+	value    int64
+	name     string
+	typeName string
 }
 
 func NewSimpleCounter(name string, value int64) Counter {
 	return &SimpleCounter{
-		Value: value,
-		Name:  name,
+		value:    value,
+		name:     name,
+		typeName: COUNTER,
 	}
 }
 
 func (s *SimpleCounter) GetValue() int64 {
-	return s.Value
+	return s.value
 }
 func (s *SimpleCounter) GetName() string {
-	return s.Name
+	return s.name
 }
+func (s *SimpleCounter) GetType() string { return s.typeName }
