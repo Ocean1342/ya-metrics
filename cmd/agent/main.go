@@ -21,12 +21,12 @@ func main() {
 		for _, m := range mgen.GenerateGaugeMetrics() {
 			url := prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 			req, err := requestPrepare(url, http.MethodPost, buffer)
-
 			if err != nil {
 				fmt.Println(err)
 			}
-
 			resp := sendRequest(req)
+			defer resp.Body.Close()
+
 			err = responseAnalyze(resp)
 			if err != nil {
 				fmt.Println(err)
@@ -41,6 +41,7 @@ func main() {
 			fmt.Println(err)
 		}
 		resp := sendRequest(req)
+		defer resp.Body.Close()
 		err = responseAnalyze(resp)
 		if err != nil {
 			fmt.Println(err)
