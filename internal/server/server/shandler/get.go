@@ -40,7 +40,7 @@ func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	g := gh.gaugeStorage.Get(name)
 	if g != nil {
-		_, err := w.Write([]byte(fmt.Sprintf("%s:%v", g.GetName(), g.GetValue())))
+		_, err := w.Write([]byte(fmt.Sprintf("%v", g.GetValue())))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
