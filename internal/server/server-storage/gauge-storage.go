@@ -1,6 +1,9 @@
 package srvrstrg
 
-import "ya-metrics/pkg/mdata"
+import (
+	"strconv"
+	"ya-metrics/pkg/mdata"
+)
 
 func NewSimpleGaugeStorage() GaugeStorage {
 	return &SimpleGaugeStorage{
@@ -23,4 +26,12 @@ func (s *SimpleGaugeStorage) Get(n string) mdata.Gauge {
 func (s *SimpleGaugeStorage) Set(m mdata.Gauge) error {
 	s.storage[m.GetName()] = m
 	return nil
+}
+
+func (s *SimpleGaugeStorage) GetList() map[string]string {
+	res := make(map[string]string, len(s.storage))
+	for k, v := range s.storage {
+		res[k] = strconv.Itoa(int(v.GetValue()))
+	}
+	return res
 }

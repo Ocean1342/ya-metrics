@@ -34,7 +34,7 @@ type UpdateHandler struct {
 }
 
 // TODO: как убрать дублирование writer.WriteHeader(http.StatusBadRequest)
-func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, req *http.Request) {
+func (uh *UpdateHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request) {
 	writer.Header().Set("Content-Type", "text/plain")
 	if req.Method != http.MethodPost {
 		writer.WriteHeader(http.StatusBadRequest)
