@@ -1,4 +1,4 @@
-package server_storage
+package srvrstrg
 
 import "ya-metrics/pkg/mdata"
 

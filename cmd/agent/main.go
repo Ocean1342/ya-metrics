@@ -19,7 +19,7 @@ func main() {
 	for {
 		buffer := bytes.NewBuffer([]byte(""))
 		for _, m := range mgen.GenerateGaugeMetrics() {
-			url := prepareUrlGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
+			url := prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 			req, err := requestPrepare(url, http.MethodPost, buffer)
 
 			if err != nil {
@@ -34,7 +34,7 @@ func main() {
 		}
 		pCount++
 		c := mdata.NewSimpleCounter("PollCount", pCount)
-		url := prepareUrlCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
+		url := prepareURLCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
 		req, err := requestPrepare(url, http.MethodPost, buffer)
 		//TODO: добавить обработку ошибок
 		if err != nil {
@@ -51,11 +51,11 @@ func main() {
 
 }
 
-func prepareUrlCounter(base, typeName, name string, value int64) string {
+func prepareURLCounter(base, typeName, name string, value int64) string {
 	return base + fmt.Sprintf("/update/%s/%s/%d", typeName, name, value)
 }
 
-func prepareUrlGauge(base, typeName, name string, value float64) string {
+func prepareURLGauge(base, typeName, name string, value float64) string {
 	return base + fmt.Sprintf("/update/%s/%s/%v", typeName, name, value)
 }
 
@@ -81,10 +81,17 @@ func sendRequest(req *http.Request) *http.Response {
 
 // TODO: доделать анализ ответа
 func responseAnalyze(resp *http.Response) error {
-	// Читаем ответ
 	if resp == nil {
 		return fmt.Errorf("nil response")
 	}
+	// Читаем ответ
+	defer func(Body io.ReadCloser) error {
+		err := Body.Close()
+		if err != nil {
+			return fmt.Errorf("response body close error: %s", err)
+		}
+		return nil
+	}(resp.Body)
 	_, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading response:", err)

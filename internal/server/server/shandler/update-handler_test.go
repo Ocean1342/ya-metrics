@@ -90,7 +90,7 @@ func TestUpdateHandler(t *testing.T) {
 			uh.HandlePost(nr, req)
 			//nr получить результ
 			res := nr.Result()
-
+			defer res.Body.Close()
 			//сравнить результаты
 			assert.Equal(t, tt.want.code, res.StatusCode)
 			assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))

@@ -10,7 +10,7 @@ type YaServeable interface {
 	Start()
 }
 
-type YaHttpServer struct {
+type YaHTTPServer struct {
 	Config *config.Config
 	routes map[string]HttpHandler
 }
@@ -20,10 +20,10 @@ type Routes map[string]HttpHandler
 type HttpHandler func(http.ResponseWriter, *http.Request)
 
 func NewYaServeable(cfg *config.Config, routes map[string]HttpHandler) YaServeable {
-	return &YaHttpServer{Config: cfg, routes: routes}
+	return &YaHTTPServer{Config: cfg, routes: routes}
 }
 
-func (s *YaHttpServer) Start() {
+func (s *YaHTTPServer) Start() {
 	mux := http.NewServeMux()
 	for route, handler := range s.routes {
 		mux.HandleFunc(route, handler)
