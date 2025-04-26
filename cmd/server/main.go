@@ -14,14 +14,16 @@ func main() {
 		Host: "localhost",
 	}
 
-	updateHandler := shandler.NewUpdateHandler(
-		mdata.InitMetrics(),
-		server_storage.NewSimpleGaugeStorage(),
-		server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter),
-	)
+	gaugeStorage := server_storage.NewSimpleGaugeStorage()
+	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
+
+	updateHandler := shandler.NewUpdateHandler(mdata.InitMetrics(), gaugeStorage, countStorage)
+	getHandler := shandler.NewGetHandler(mdata.InitMetrics(), gaugeStorage, countStorage)
+
 	routes := server.Routes{
 		"/update/{type}/{name}/{value}": updateHandler.HandlePost,
+		"/value/{type}/{name}":          getHandler.ServeHTTP,
 	}
-	s := server.NewYaServeable(&cfg, routes)
+	s := server.NewChiServeable(&cfg, routes)
 	s.Start()
 }

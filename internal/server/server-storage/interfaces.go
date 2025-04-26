@@ -8,6 +8,6 @@ type CounterStorage interface {
 }
 
 type GaugeStorage interface {
-	Get(n string) *mdata.Gauge
+	Get(n string) mdata.Gauge
 	Set(m mdata.Gauge) error
 }

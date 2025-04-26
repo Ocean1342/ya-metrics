@@ -12,14 +12,12 @@ type YaServeable interface {
 
 type YaHTTPServer struct {
 	Config *config.Config
-	routes map[string]HTTPHandler
+	routes map[string]http.HandlerFunc
 }
 
-type Routes map[string]HTTPHandler
+type Routes map[string]http.HandlerFunc
 
-type HTTPHandler func(http.ResponseWriter, *http.Request)
-
-func NewYaServeable(cfg *config.Config, routes map[string]HTTPHandler) YaServeable {
+func NewYaServeable(cfg *config.Config, routes map[string]http.HandlerFunc) YaServeable {
 	return &YaHTTPServer{Config: cfg, routes: routes}
 }
 

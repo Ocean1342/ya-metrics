@@ -12,12 +12,12 @@ type SimpleGaugeStorage struct {
 	storage map[string]mdata.Gauge
 }
 
-func (s *SimpleGaugeStorage) Get(n string) *mdata.Gauge {
+func (s *SimpleGaugeStorage) Get(n string) mdata.Gauge {
 	elem, ok := s.storage[n]
 	if !ok {
 		return nil
 	}
-	return &elem
+	return elem
 }
 
 func (s *SimpleGaugeStorage) Set(m mdata.Gauge) error {
