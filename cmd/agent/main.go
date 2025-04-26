@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"context"
 	"fmt"
 	"io"
 	"net/http"
@@ -13,10 +14,26 @@ import (
 func main() {
 	//TODO: вынести в конфиги
 	var pCount int64
-	srvrAddr := "https://localhost:8080"
+	srvrAddr := "http://localhost:8080"
 	reportIntervalSec := 10
+	timeToWork := time.Duration(120) * time.Second
+	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
+	defer cancel()
 
 	for {
+		select {
+		case <-ctx.Done():
+			fmt.Println("shutting down")
+			return
+		default:
+			run(srvrAddr, pCount, reportIntervalSec)
+		}
+
+	}
+}
+
+func run(srvrAddr string, pCount int64, reportIntervalSec int) {
+	func() {
 		buffer := bytes.NewBuffer([]byte(""))
 		for _, m := range mgen.GenerateGaugeMetrics() {
 			url := prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
@@ -25,7 +42,10 @@ func main() {
 				fmt.Println(err)
 			}
 			resp := sendRequest(req)
-			defer resp.Body.Close()
+			if resp == nil {
+				fmt.Println("response is nil")
+				continue
+			}
 
 			err = responseAnalyze(resp)
 			if err != nil {
@@ -41,6 +61,10 @@ func main() {
 			fmt.Println(err)
 		}
 		resp := sendRequest(req)
+		if resp == nil {
+			fmt.Println("response is nil")
+			return
+		}
 		defer resp.Body.Close()
 		err = responseAnalyze(resp)
 		if err != nil {
@@ -48,8 +72,7 @@ func main() {
 		}
 		//sleep
 		time.Sleep(time.Second * time.Duration(reportIntervalSec))
-	}
-
+	}()
 }
 
 func prepareURLCounter(base, typeName, name string, value int64) string {
@@ -86,13 +109,7 @@ func responseAnalyze(resp *http.Response) error {
 		return fmt.Errorf("nil response")
 	}
 	// Читаем ответ
-	defer func(Body io.ReadCloser) error {
-		err := Body.Close()
-		if err != nil {
-			return fmt.Errorf("response body close error: %s", err)
-		}
-		return nil
-	}(resp.Body)
+	defer resp.Body.Close()
 	_, err := io.ReadAll(resp.Body)
 	if err != nil {
 		fmt.Println("Error reading response:", err)
