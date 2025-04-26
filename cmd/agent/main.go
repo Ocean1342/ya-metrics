@@ -46,7 +46,7 @@ func run(srvrAddr string, pCount int64, reportIntervalSec int) {
 				fmt.Println("response is nil")
 				continue
 			}
-
+			defer resp.Body.Close()
 			err = responseAnalyze(resp)
 			if err != nil {
 				fmt.Println(err)
