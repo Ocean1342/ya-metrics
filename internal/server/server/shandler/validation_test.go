@@ -37,7 +37,7 @@ func TestUpdateHandler_validateUpdateRequest(t *testing.T) {
 			name:   "negative case wrong name",
 			fields: initHandlerFields(),
 			args: args{
-				ur: &UpdateRequest{Type: mdata.GAUGE, Name: "Wrong", Value: "1.24"},
+				ur: &UpdateRequest{Type: mdata.GAUGE, Name: "", Value: "1.24"},
 			},
 			wantErr: true,
 		},
@@ -45,7 +45,7 @@ func TestUpdateHandler_validateUpdateRequest(t *testing.T) {
 			name:   "negative case wrong type",
 			fields: initHandlerFields(),
 			args: args{
-				ur: &UpdateRequest{Type: mdata.GAUGE, Name: "Wrong", Value: "1.24"},
+				ur: &UpdateRequest{Type: "WrongType", Name: "some", Value: "1.24"},
 			},
 			wantErr: true,
 		},
