@@ -7,6 +7,9 @@ import (
 )
 
 func (uh *UpdateHandler) validateUpdateRequest(ur *UpdateRequest) error {
+	if ur == nil {
+		return fmt.Errorf("nil UpdateRequest")
+	}
 	err := uh.validateMetricTypeName(ur)
 	if err != nil {
 		return err

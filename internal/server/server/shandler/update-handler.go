@@ -33,28 +33,35 @@ type UpdateHandler struct {
 	countStorage          server_storage.CounterStorage
 }
 
+// TODO: как убрать дублирование writer.WriteHeader(http.StatusBadRequest)
 func (uh *UpdateHandler) HandlePost(writer http.ResponseWriter, req *http.Request) {
+	writer.Header().Set("Content-Type", "text/plain")
 	if req.Method != http.MethodPost {
+		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, "Only POST method is allowed", http.StatusMethodNotAllowed)
 		return
 	}
 	err := uh.validateRequestHeader(req)
 	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	ur, err := uh.updateRequestPrepare(req.URL.Path)
 	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 	if err = uh.validateUpdateRequest(ur); err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
 
 	err = uh.saveData(ur)
 	if err != nil {
+		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
