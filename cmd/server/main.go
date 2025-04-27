@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"ya-metrics/config"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
@@ -9,9 +10,13 @@ import (
 )
 
 func main() {
+	hostStr := flag.String("a", "localhost:8080", "server address")
+	flag.Parse()
+
 	cfg := config.Config{
-		Port: 8080,
-		Host: "localhost",
+		Port:       8080,
+		Host:       "localhost",
+		HostString: *hostStr,
 	}
 
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
