@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
+	"strconv"
 	"time"
 	"ya-metrics/internal/agent/mgen"
 	"ya-metrics/pkg/mdata"
@@ -17,6 +19,23 @@ func main() {
 	reportIntervalSec := flag.Int("r", 10, "report interval")
 	pollIntervalSec := flag.Int("p", 2, "poll interval")
 	flag.Parse()
+	if os.Getenv("ADDRESS") != "" {
+		*host = os.Getenv("ADDRESS")
+	}
+	if os.Getenv("REPORT_INTERVAL") != "" {
+		envValReportIntervalSec, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+		if err != nil {
+			panic(err)
+		}
+		*reportIntervalSec = envValReportIntervalSec
+	}
+	if os.Getenv("POLL_INTERVAL") != "" {
+		valEnvPollIntervalSec, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+		if err != nil {
+			panic(err)
+		}
+		*pollIntervalSec = valEnvPollIntervalSec
+	}
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(120) * time.Second

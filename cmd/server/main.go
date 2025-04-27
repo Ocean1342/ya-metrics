@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"os"
 	"ya-metrics/config"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
@@ -12,6 +13,9 @@ import (
 func main() {
 	hostStr := flag.String("a", "localhost:8080", "server address")
 	flag.Parse()
+	if os.Getenv("ADDRESS") != "" {
+		*hostStr = os.Getenv("ADDRESS")
+	}
 
 	cfg := config.Config{
 		Port:       8080,
