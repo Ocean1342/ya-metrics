@@ -51,9 +51,8 @@ func (uh *UpdateHandler) validateMetricValueNotEmpty(ur *UpdateRequest) error {
 
 func (uh *UpdateHandler) validateRequestHeader(req *http.Request) error {
 	//TODO: тест 3ий итерации
-	//if strings.EqualFold(req.Header.Get("Content-Type"), "text/plain") {
-	//	return nil
-	//}
-	//return fmt.Errorf("content type: %s not allowed", req.Header.Get("Content-Type"))
-	return nil
+	if strings.EqualFold(req.Header.Get("Content-Type"), "text/plain") {
+		return nil
+	}
+	return fmt.Errorf("content type: %s not allowed", req.Header.Get("Content-Type"))
 }
