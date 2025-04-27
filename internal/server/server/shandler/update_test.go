@@ -87,7 +87,7 @@ func TestUpdateHandler(t *testing.T) {
 				gaugeStorage:          tt.fields.gaugeStorage,
 				countStorage:          tt.fields.countStorage,
 			}
-			uh.HandlePost(nr, req)
+			uh.ServeHTTP(nr, req)
 			//nr получить результ
 			res := nr.Result()
 			defer res.Body.Close()
