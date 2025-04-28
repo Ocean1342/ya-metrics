@@ -62,7 +62,7 @@ func (uh *UpdateHandler) ServeHTTP(writer http.ResponseWriter, req *http.Request
 	err = uh.saveData(ur)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
-		http.Error(writer, err.Error(), http.StatusBadRequest)
+		http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
