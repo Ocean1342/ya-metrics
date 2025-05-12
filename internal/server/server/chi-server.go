@@ -1,7 +1,6 @@
 package server
 
 import (
-	"fmt"
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
@@ -25,7 +24,7 @@ func (s *ChiServer) Start() {
 	for route, handler := range s.routes {
 		router.HandleFunc(route, handler)
 	}
-	err := http.ListenAndServe(fmt.Sprintf("%s:%d", s.Config.Host, s.Config.Port), router)
+	err := http.ListenAndServe(s.Config.HostString, router)
 	if err != nil {
 		panic(err)
 	}

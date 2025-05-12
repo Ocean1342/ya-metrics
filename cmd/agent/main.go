@@ -3,6 +3,7 @@ package main
 import (
 	"bytes"
 	"context"
+	"flag"
 	"fmt"
 	"io"
 	"net/http"
@@ -12,10 +13,12 @@ import (
 )
 
 func main() {
-	//TODO: вынести в конфиги
-	var pCount int64
-	srvrAddr := "http://localhost:8080"
-	reportIntervalSec := 10
+	host := flag.String("a", "localhost:8080", "agent host")
+	reportIntervalSec := flag.Int("r", 10, "report interval")
+	pollIntervalSec := flag.Int("p", 2, "poll interval")
+	flag.Parse()
+
+	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
@@ -26,7 +29,7 @@ func main() {
 			fmt.Println("shutting down")
 			return
 		default:
-			run(srvrAddr, pCount, reportIntervalSec)
+			run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
 
 	}
