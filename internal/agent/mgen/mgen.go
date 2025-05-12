@@ -6,12 +6,6 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-// TODO: нужон ли этот интерфейс?
-type Metrics interface {
-	GenerateGaugeMetrics() []mdata.Gauge
-	GenerateCounterMetrics() []mdata.Counter
-}
-
 func GenerateGaugeMetrics() []mdata.Gauge {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
