@@ -37,16 +37,16 @@ func main() {
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
-
+	j := runagent.JsonAgent{}
+	a := runagent.SimpleAgent{}
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("shutting down")
 			return
 		default:
-			a := runagent.JsonAgent{}
 			a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			j.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
-
 	}
 }
