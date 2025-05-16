@@ -23,7 +23,6 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 			}
 			resp := s.sendRequest(req)
 			if resp == nil {
-				fmt.Println("response is nil")
 				continue
 			}
 			defer resp.Body.Close()
@@ -41,7 +40,6 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 		defer req.Body.Close()
 		resp := s.sendRequest(req)
 		if resp == nil {
-			fmt.Println("response is nil")
 			return
 		}
 		defer resp.Body.Close()
@@ -115,6 +113,5 @@ func (s *JSONAgent) responseAnalyze(resp *http.Response) error {
 		return fmt.Errorf("error reading response")
 	}
 
-	fmt.Println("Response Status:", resp.Status)
 	return nil
 }

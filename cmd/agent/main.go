@@ -32,7 +32,6 @@ func main() {
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
-
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
@@ -40,7 +39,7 @@ func main() {
 	j := runagent.JSONAgent{}
 	a := runagent.SimpleAgent{}
 	//TODO: костыль, чтобы дать время серверу подняться
-	time.Sleep(10 * time.Second)
+	time.Sleep(30 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():

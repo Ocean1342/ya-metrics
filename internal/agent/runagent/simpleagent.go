@@ -20,10 +20,10 @@ func (s *SimpleAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) 
 			req, err := s.requestPrepare(url, http.MethodPost, buffer)
 			if err != nil {
 				fmt.Println(err)
+				continue
 			}
 			resp := s.sendRequest(req)
 			if resp == nil {
-				fmt.Println("response is nil")
 				continue
 			}
 			defer resp.Body.Close()
@@ -42,7 +42,6 @@ func (s *SimpleAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) 
 		}
 		resp := s.sendRequest(req)
 		if resp == nil {
-			fmt.Println("response is nil")
 			return
 		}
 		defer resp.Body.Close()
@@ -97,6 +96,5 @@ func (s *SimpleAgent) responseAnalyze(resp *http.Response) error {
 		return fmt.Errorf("error reading response")
 	}
 
-	fmt.Println("Response Status:", resp.Status)
 	return nil
 }
