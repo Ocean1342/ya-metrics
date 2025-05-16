@@ -13,7 +13,6 @@ import (
 type SimpleAgent struct{}
 
 func (s *SimpleAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
-
 	func() {
 		buffer := bytes.NewBuffer([]byte(""))
 		for _, m := range mgen.GenerateGaugeMetrics() {
@@ -81,6 +80,7 @@ func (s *SimpleAgent) sendRequest(req *http.Request) *http.Response {
 		fmt.Println(err)
 		return nil
 	}
+	time.Sleep(1000 * time.Microsecond)
 	return resp
 }
 

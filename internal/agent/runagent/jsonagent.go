@@ -18,7 +18,6 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 		url := s.prepareURL(srvrAddr)
 		for _, m := range mgen.GenerateGaugeMetrics() {
 			req, err := s.gaugeRequestPrepare(m, url, http.MethodPost)
-			defer req.Body.Close()
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -27,6 +26,7 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 				fmt.Println("response is nil")
 				continue
 			}
+			defer resp.Body.Close()
 			err = s.responseAnalyze(resp)
 			if err != nil {
 				fmt.Println(err)
@@ -44,6 +44,7 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 			fmt.Println("response is nil")
 			return
 		}
+		defer resp.Body.Close()
 
 		err = s.responseAnalyze(resp)
 		if err != nil {
@@ -98,6 +99,7 @@ func (s *JSONAgent) sendRequest(req *http.Request) *http.Response {
 		fmt.Println(err)
 		return nil
 	}
+	time.Sleep(1000 * time.Microsecond)
 	return resp
 }
 

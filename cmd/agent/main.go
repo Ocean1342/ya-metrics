@@ -45,7 +45,7 @@ func main() {
 			fmt.Println("shutting down")
 			return
 		default:
-			go a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 			j.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
 	}
