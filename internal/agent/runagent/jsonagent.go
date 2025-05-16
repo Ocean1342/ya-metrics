@@ -35,10 +35,10 @@ func (s *JSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
 		pCount++
 		c := mdata.NewSimpleCounter("PollCount", pCount)
 		req, err := s.counterRequestPrepare(c, url, http.MethodPost)
-		defer req.Body.Close()
 		if err != nil {
 			fmt.Println(err)
 		}
+		defer req.Body.Close()
 		resp := s.sendRequest(req)
 		if resp == nil {
 			fmt.Println("response is nil")

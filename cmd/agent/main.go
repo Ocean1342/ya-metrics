@@ -39,6 +39,8 @@ func main() {
 	defer cancel()
 	j := runagent.JSONAgent{}
 	a := runagent.SimpleAgent{}
+	//TODO: костыль, чтобы дать время серверу подняться
+	time.Sleep(10 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
