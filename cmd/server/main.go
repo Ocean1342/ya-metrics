@@ -33,11 +33,11 @@ func main() {
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 
 	routes := server.Routes{
-		"/":                             shandler.NewUpdateHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
-		"/update/{type}/{name}/{value}": shandler.NewGetListHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/":                             shandler.NewGetListHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/update/{type}/{name}/{value}": shandler.NewUpdateHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
 		"/value/{type}/{name}":          shandler.NewGetHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
-		"/update/":                      shandler.NewJsonUpdateHandler(gaugeStorage, countStorage).ServeHTTP,
-		"/value/":                       shandler.NewGetJsonMetricsHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/update/":                      shandler.NewJSONUpdateHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/value/":                       shandler.NewGetJSONMetricsHandler(gaugeStorage, countStorage).ServeHTTP,
 	}
 
 	s := server.NewChiServeable(&cfg, routes, initMiddlewares())

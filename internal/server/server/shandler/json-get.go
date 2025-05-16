@@ -8,19 +8,19 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-func NewGetJsonMetricsHandler(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage) *GetJsonMetricsHandler {
-	return &GetJsonMetricsHandler{
+func NewGetJSONMetricsHandler(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage) *GetJSONMetricsHandler {
+	return &GetJSONMetricsHandler{
 		gaugeStorage: gaugeStorage,
 		countStorage: countStorage,
 	}
 }
 
-type GetJsonMetricsHandler struct {
+type GetJSONMetricsHandler struct {
 	gaugeStorage server_storage.GaugeStorage
 	countStorage server_storage.CounterStorage
 }
 
-func (g *GetJsonMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (g *GetJSONMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 		return
@@ -46,7 +46,7 @@ func (g *GetJsonMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	w.Write(data)
 }
 
-func (g *GetJsonMetricsHandler) getMetric(getReq *mdata.Metrics) (*mdata.Metrics, error) {
+func (g *GetJSONMetricsHandler) getMetric(getReq *mdata.Metrics) (*mdata.Metrics, error) {
 	switch getReq.MType {
 	case mdata.GAUGE:
 		v := g.gaugeStorage.Get(getReq.ID)

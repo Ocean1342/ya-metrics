@@ -9,22 +9,22 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type JsonUpdateHandler struct {
+type JSONUpdateHandler struct {
 	gaugeStorage server_storage.GaugeStorage
 	countStorage server_storage.CounterStorage
 }
 
-func NewJsonUpdateHandler(
+func NewJSONUpdateHandler(
 	gaugeStorage server_storage.GaugeStorage,
 	countStorage server_storage.CounterStorage,
-) *JsonUpdateHandler {
-	return &JsonUpdateHandler{
+) *JSONUpdateHandler {
+	return &JSONUpdateHandler{
 		gaugeStorage,
 		countStorage,
 	}
 }
 
-func (j *JsonUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (j *JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
@@ -59,7 +59,7 @@ func (j *JsonUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	w.Write(response)
 }
 
-func (j *JsonUpdateHandler) saveData(mReq *mdata.Metrics) error {
+func (j *JSONUpdateHandler) saveData(mReq *mdata.Metrics) error {
 	switch mReq.MType {
 	case mdata.COUNTER:
 		if mReq.Delta == nil {
@@ -86,7 +86,7 @@ func (j *JsonUpdateHandler) saveData(mReq *mdata.Metrics) error {
 	return nil
 }
 
-func (j *JsonUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
+func (j *JSONUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
 	switch mReq.MType {
 	case mdata.COUNTER:
 		v, err := j.countStorage.Get(mReq.ID)
@@ -102,7 +102,7 @@ func (j *JsonUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics,
 	case mdata.GAUGE:
 		v := j.gaugeStorage.Get(mReq.ID)
 		if v == nil {
-			return nil, fmt.Errorf("Not found delta with id: %s", mReq.ID)
+			return nil, fmt.Errorf("not found delta with id: %s", mReq.ID)
 		}
 		value := v.GetValue()
 		return &mdata.Metrics{
