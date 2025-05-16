@@ -37,6 +37,7 @@ func main() {
 		"/update/{type}/{name}/{value}": shandler.NewGetListHandler(gaugeStorage, countStorage).ServeHTTP,
 		"/value/{type}/{name}":          shandler.NewGetHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
 		"/update/":                      shandler.NewJsonUpdateHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/value/":                       shandler.NewGetJsonMetricsHandler(gaugeStorage, countStorage).ServeHTTP,
 	}
 
 	s := server.NewChiServeable(&cfg, routes, initMiddlewares())

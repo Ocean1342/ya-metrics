@@ -3,6 +3,7 @@ package shandler
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"net/http"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -30,9 +31,8 @@ func (j *JsonUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 	var mReq mdata.Metrics
-
 	err := json.NewDecoder(req.Body).Decode(&mReq)
-	if err != nil {
+	if err != nil && err != io.EOF {
 		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, fmt.Sprintf("Wrong request body: %s", err), http.StatusBadRequest)
 		return
@@ -44,9 +44,19 @@ func (j *JsonUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		http.Error(w, fmt.Sprintf("Could not save data: %s", err), http.StatusBadRequest)
 		return
 	}
-
+	updVal, err := j.getUpdatedData(&mReq)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Could not get updated data: %s", err), http.StatusInternalServerError)
+		return
+	}
+	response, err := json.Marshal(updVal)
+	if err != nil {
+		http.Error(w, fmt.Sprintf("Could not create response body: %s", err), http.StatusInternalServerError)
+		return
+	}
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(200)
+	w.Write(response)
 }
 
 func (j *JsonUpdateHandler) saveData(mReq *mdata.Metrics) error {
@@ -74,4 +84,34 @@ func (j *JsonUpdateHandler) saveData(mReq *mdata.Metrics) error {
 	}
 
 	return nil
+}
+
+func (j *JsonUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
+	switch mReq.MType {
+	case mdata.COUNTER:
+		v, err := j.countStorage.Get(mReq.ID)
+		if err != nil {
+			return nil, err
+		}
+		delta := v.GetValue()
+		return &mdata.Metrics{
+			ID:    v.GetName(),
+			MType: mdata.COUNTER,
+			Delta: &delta,
+		}, nil
+	case mdata.GAUGE:
+		v := j.gaugeStorage.Get(mReq.ID)
+		if v == nil {
+			return nil, fmt.Errorf("Not found delta with id: %s", mReq.ID)
+		}
+		value := v.GetValue()
+		return &mdata.Metrics{
+			ID:    v.GetName(),
+			MType: mdata.COUNTER,
+			Value: &value,
+		}, nil
+
+	default:
+		return nil, fmt.Errorf("undefined metric type %s", mReq.MType)
+	}
 }
