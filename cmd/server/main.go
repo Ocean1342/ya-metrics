@@ -55,7 +55,9 @@ func initLogger() {
 
 func initMiddlewares() []server.Middleware {
 	return []server.Middleware{
+		middlewares.NewDecodeableRequestMiddleware(),
 		middlewares.NewLogResponseMiddleware(sugar),
 		middlewares.NewLogRequestMiddleware(sugar),
+		middlewares.NewEncodeResponseMiddleware(),
 	}
 }

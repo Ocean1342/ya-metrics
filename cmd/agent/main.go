@@ -36,18 +36,20 @@ func main() {
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
+	c := runagent.CompressJSONAgent{}
 	j := runagent.JSONAgent{}
 	a := runagent.SimpleAgent{}
 	//TODO: костыль, чтобы дать время серверу подняться
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			fmt.Println("shutting down")
 			return
 		default:
-			a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			c.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 			j.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
 	}
 }
