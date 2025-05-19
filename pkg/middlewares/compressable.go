@@ -7,12 +7,15 @@ import (
 	"ya-metrics/internal/server/server"
 )
 
-func NewEncodeResponseMiddleware() server.Middleware {
+func NewCompressResponseMiddleware() server.Middleware {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			b := validateAcceptEncoding(r.Header.Values("Accept-Encoding")) && validateContentType(r.Header.Values("Content-Type"))
 			if b {
-				next.ServeHTTP(NewCompressableResponseWriter(w), r)
+				nw := NewCompressableResponseWriter(w)
+				next.ServeHTTP(nw, r)
+				//TODO: ?
+				defer nw.Close()
 			} else {
 				next.ServeHTTP(w, r)
 			}
@@ -60,6 +63,9 @@ func (c *CompressableResponseWriter) Header() http.Header {
 }
 
 func (c *CompressableResponseWriter) WriteHeader(statusCode int) {
+	if statusCode < 300 {
+		c.w.Header().Set("Content-Encoding", "gzip")
+	}
 	c.w.WriteHeader(statusCode)
 }
 
