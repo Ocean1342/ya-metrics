@@ -33,10 +33,6 @@ func (gl *GetList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		result += fmt.Sprintf("%s:%v", name, val)
 	}
 
-	_, err := w.Write([]byte(result))
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return
-	}
 	w.WriteHeader(http.StatusOK)
+	w.Write([]byte(result))
 }
