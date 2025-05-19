@@ -40,19 +40,21 @@ func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	name := chi.URLParam(r, "name")
 	g := gh.gaugeStorage.Get(name)
 	if g != nil {
+		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(fmt.Sprintf("%v", g.GetValue())))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
 			return
 		}
-		w.WriteHeader(http.StatusOK)
 		return
 	}
 	c, err := gh.countStorage.Get(name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return
 	}
 	if c != nil {
+		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(fmt.Sprintf("%v", c.GetValue())))
 		if err != nil {
 			w.WriteHeader(http.StatusInternalServerError)
@@ -60,4 +62,5 @@ func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 	}
 	w.WriteHeader(http.StatusNotFound)
+	w.Write([]byte(""))
 }

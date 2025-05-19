@@ -7,20 +7,24 @@ import (
 	"ya-metrics/config"
 )
 
-func NewChiServeable(cfg *config.Config, routes map[string]http.HandlerFunc) YaServeable {
-	return &ChiServer{Config: cfg, routes: routes}
+type Middleware func(http.Handler) http.Handler
+
+func NewChiServeable(cfg *config.Config, routes map[string]http.HandlerFunc, middlewares []Middleware) YaServeable {
+	return &ChiServer{Config: cfg, routes: routes, middlewares: middlewares}
 }
 
 type ChiServer struct {
-	Config *config.Config
-	routes map[string]http.HandlerFunc
+	Config      *config.Config
+	routes      map[string]http.HandlerFunc
+	middlewares []Middleware
 }
 
 func (s *ChiServer) Start() {
 	router := chi.NewRouter()
 	router.Use(middleware.RequestID)
-	router.Use(middleware.Logger)
-
+	for _, m := range s.middlewares {
+		router.Use(m)
+	}
 	for route, handler := range s.routes {
 		router.HandleFunc(route, handler)
 	}
