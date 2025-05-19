@@ -10,7 +10,7 @@ import (
 func NewCompressResponseMiddleware() server.Middleware {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			b := validateAcceptEncoding(r.Header.Values("Accept-Encoding")) && validateContentType(r.Header.Values("Content-Type"))
+			b := validateAcceptEncoding(r.Header.Values("Accept-Encoding")) && validateContentType(r.Header.Values("Accept"))
 			if b {
 				nw := NewCompressableResponseWriter(w)
 				next.ServeHTTP(nw, r)
