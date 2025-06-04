@@ -1,10 +1,13 @@
 package main
 
 import (
-	"flag"
+	"fmt"
 	"go.uber.org/zap"
 	"os"
+	"os/signal"
+	"syscall"
 	"ya-metrics/config"
+	"ya-metrics/internal/server/permstore"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/internal/server/server/shandler"
@@ -14,20 +17,42 @@ import (
 
 var sugar *zap.SugaredLogger
 
+//TODO:
+//		0 - продумать передачу метрик при синхронном режиме
+//		1 - реализация новых хранилищ
+//		2 - реализация интерфейса PermanentStorable
+
 func main() {
 	initLogger()
-
-	hostStr := flag.String("a", "localhost:8080", "server address")
-	flag.Parse()
-	if os.Getenv("ADDRESS") != "" {
-		*hostStr = os.Getenv("ADDRESS")
+	cfg := config.InitConfig()
+	//init perm store
+	permStore := permstore.NewPermStore(cfg)
+	err := permStore.ExtractFromPermStore()
+	if err != nil {
+		panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
 	}
-
-	cfg := config.Config{
-		Port:       8080,
-		Host:       "localhost",
-		HostString: *hostStr,
-	}
+	//принудительная выгрузка при завершении работы
+	sigCh := make(chan os.Signal)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	go func() {
+		for {
+			select {
+			case v, ok := <-sigCh:
+				err = permStore.PutDataToPermStore()
+				if err != nil {
+					panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
+				}
+				if ok {
+					switch v {
+					case syscall.SIGINT:
+						os.Exit(int(syscall.SIGINT))
+					case syscall.SIGTERM:
+						os.Exit(int(syscall.SIGTERM))
+					}
+				}
+			}
+		}
+	}()
 
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
@@ -40,7 +65,7 @@ func main() {
 		"/value/":                       shandler.NewGetJSONMetricsHandler(gaugeStorage, countStorage).ServeHTTP,
 	}
 
-	s := server.NewChiServeable(&cfg, routes, initMiddlewares())
+	s := server.NewChiServeable(cfg, routes, initMiddlewares())
 	s.Start()
 }
 
