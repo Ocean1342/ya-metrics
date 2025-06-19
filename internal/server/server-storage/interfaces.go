@@ -16,4 +16,5 @@ type GaugeStorage interface {
 
 type Listable interface {
 	GetList() map[string]string
+	GetMetrics() []mdata.Metrics
 }

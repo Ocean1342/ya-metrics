@@ -35,3 +35,17 @@ func (s *SimpleGaugeStorage) GetList() map[string]string {
 	}
 	return res
 }
+func (s *SimpleGaugeStorage) GetMetrics() []mdata.Metrics {
+	md := make([]mdata.Metrics, len(s.storage))
+	i := 0
+	for _, gauge := range s.storage {
+		value := gauge.GetValue()
+		md[i] = mdata.Metrics{
+			ID:    gauge.GetName(),
+			MType: mdata.GAUGE,
+			Value: &value,
+		}
+		i++
+	}
+	return md
+}

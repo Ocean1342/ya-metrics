@@ -17,7 +17,7 @@ type Config struct {
 
 type PermStoreOptions struct {
 	StoreInterval   int64  `env:"STORE_INTERVAL" default:"300"`
-	FileStoragePath string `env:"FILE_STORAGE_PATH" default:"perm_storage.json"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" default:"perm_storage.local.json"`
 	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
 }
 

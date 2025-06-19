@@ -32,6 +32,7 @@ func (g *SimpleGauge) GetValue() float64 {
 func (g *SimpleGauge) GetName() string {
 	return g.name
 }
+
 func (g *SimpleGauge) GetType() string {
 	return g.typeName
 }

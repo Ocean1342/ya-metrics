@@ -36,3 +36,18 @@ func (s *SimpleCountStorage) GetList() map[string]string {
 	}
 	return res
 }
+
+func (s *SimpleCountStorage) GetMetrics() []mdata.Metrics {
+	md := make([]mdata.Metrics, len(s.storage))
+	i := 0
+	for _, gauge := range s.storage {
+		value := gauge.GetValue()
+		md[i] = mdata.Metrics{
+			ID:    gauge.GetName(),
+			MType: mdata.GAUGE,
+			Delta: &value,
+		}
+		i++
+	}
+	return md
+}

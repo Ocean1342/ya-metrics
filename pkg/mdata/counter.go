@@ -22,7 +22,9 @@ func NewSimpleCounter(name string, value int64) Counter {
 func (s *SimpleCounter) GetValue() int64 {
 	return s.value
 }
+
 func (s *SimpleCounter) GetName() string {
 	return s.name
 }
+
 func (s *SimpleCounter) GetType() string { return s.typeName }

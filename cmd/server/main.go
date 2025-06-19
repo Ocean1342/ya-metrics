@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"go.uber.org/zap"
 	"os"
@@ -18,6 +19,7 @@ import (
 var sugar *zap.SugaredLogger
 
 //TODO:
+//	    -1 - реализовать выгрузку по завершению приложения, done
 //		0 - продумать передачу метрик при синхронном режиме
 //		1 - реализация новых хранилищ
 //		2 - реализация интерфейса PermanentStorable
@@ -25,15 +27,17 @@ var sugar *zap.SugaredLogger
 func main() {
 	initLogger()
 	cfg := config.InitConfig()
+	gaugeStorage := server_storage.NewSimpleGaugeStorage()
+	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	//init perm store
-	permStore := permstore.NewPermStore(cfg)
+	permStore := permstore.NewPermStore(context.TODO(), sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	err := permStore.ExtractFromPermStore()
 	if err != nil {
 		panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
 	}
-	//принудительная выгрузка при завершении работы
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	//принудительная выгрузка при завершении работы
 	go func() {
 		for {
 			select {
@@ -53,9 +57,6 @@ func main() {
 			}
 		}
 	}()
-
-	gaugeStorage := server_storage.NewSimpleGaugeStorage()
-	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 
 	routes := server.Routes{
 		"/":                             shandler.NewGetListHandler(gaugeStorage, countStorage).ServeHTTP,
