@@ -12,7 +12,7 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-func initPermStore() PermanentStorable {
+func initFullFilledPermStore() PermanentStorable {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic("could not start logger")
@@ -41,6 +41,18 @@ func initPermStore() PermanentStorable {
 }
 
 func TestNewPermStore_PutDataToPermStore_PositiveCase(t *testing.T) {
-	s := initPermStore()
+	s := initFullFilledPermStore()
 	assert.NoError(t, s.PutDataToPermStore())
+}
+
+func TestPermStore_ExctractData(t *testing.T) {
+	s := initFullFilledPermStore()
+	s.PutDataToPermStore()
+	assert.NoError(t, s.ExtractFromPermStore())
+}
+
+func TestPermStore_ExctractFrom(t *testing.T) {
+	s := initFullFilledPermStore()
+	s.PutDataToPermStore()
+	assert.NoError(t, s.ExtractFromPermStore())
 }

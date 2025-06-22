@@ -31,9 +31,11 @@ func main() {
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	//init perm store
 	permStore := permstore.NewPermStore(context.TODO(), sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
-	err := permStore.ExtractFromPermStore()
-	if err != nil {
-		panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
+	if cfg.PermStoreOptions.RestoreOnStart {
+		err := permStore.ExtractFromPermStore()
+		if err != nil {
+			panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
+		}
 	}
 	sigCh := make(chan os.Signal)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
@@ -42,7 +44,7 @@ func main() {
 		for {
 			select {
 			case v, ok := <-sigCh:
-				err = permStore.PutDataToPermStore()
+				err := permStore.PutDataToPermStore()
 				if err != nil {
 					panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
 				}

@@ -40,14 +40,28 @@ func (s *SimpleCountStorage) GetList() map[string]string {
 func (s *SimpleCountStorage) GetMetrics() []mdata.Metrics {
 	md := make([]mdata.Metrics, len(s.storage))
 	i := 0
-	for _, gauge := range s.storage {
-		value := gauge.GetValue()
+	for _, counter := range s.storage {
+		value := counter.GetValue()
 		md[i] = mdata.Metrics{
-			ID:    gauge.GetName(),
-			MType: mdata.GAUGE,
+			ID:    counter.GetName(),
+			MType: counter.GetType(),
 			Delta: &value,
 		}
 		i++
 	}
 	return md
+}
+
+func (s *SimpleCountStorage) SetFrom(metrics []mdata.Metrics) error {
+	factory := mdata.NewSimpleCounter
+	for _, m := range metrics {
+		if m.MType != mdata.COUNTER {
+			continue
+		}
+		err := s.Set(factory(m.ID, *m.Delta))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

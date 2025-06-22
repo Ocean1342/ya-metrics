@@ -1,6 +1,7 @@
 package srvrstrg
 
 import (
+	"fmt"
 	"strconv"
 	"ya-metrics/pkg/mdata"
 )
@@ -48,4 +49,24 @@ func (s *SimpleGaugeStorage) GetMetrics() []mdata.Metrics {
 		i++
 	}
 	return md
+}
+
+func (s *SimpleGaugeStorage) SetFrom(metrics []mdata.Metrics) error {
+	factory := mdata.NewSimpleGauge
+	for _, m := range metrics {
+		if m.MType != mdata.GAUGE {
+			continue
+		}
+
+		if m.Value == nil {
+			fmt.Println(m)
+			continue
+		}
+		value := *m.Value
+		err := s.Set(factory(m.ID, value))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }
