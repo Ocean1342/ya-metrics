@@ -45,7 +45,7 @@ func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.Perm
 	if cfg.StoreInterval != 0 {
 		go func() {
 			tick := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
-			for _ = range tick.C {
+			for range tick.C {
 				if _, ok := <-tick.C; !ok {
 					return
 				}
