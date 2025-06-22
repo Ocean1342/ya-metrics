@@ -34,9 +34,7 @@ func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.Perm
 	}
 	l := len(st)
 	storages := make([]srvrstrg.StorableStorage, l)
-	for i, s := range st {
-		storages[i] = s
-	}
+	copy(storages, st)
 	permStore := PermStore{
 		cfg:      cfg,
 		storages: storages,
@@ -47,13 +45,13 @@ func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.Perm
 	if cfg.StoreInterval != 0 {
 		go func() {
 			tick := time.NewTicker(time.Duration(cfg.StoreInterval) * time.Second)
-			for {
-				select {
-				case <-tick.C:
-					err = permStore.PutDataToPermStore()
-					if err != nil {
-						logger.Errorf("Error on put data to perm store on tick:%s", err)
-					}
+			for _ = range tick.C {
+				if _, ok := <-tick.C; !ok {
+					return
+				}
+				err = permStore.PutDataToPermStore()
+				if err != nil {
+					logger.Errorf("Error on put data to perm store on tick:%s", err)
 				}
 			}
 		}()
@@ -97,9 +95,7 @@ func (ps *PermStore) PutDataToPermStore() error {
 	}
 	ps.file.Seek(0, io.SeekStart)
 	for _, s := range ps.storages {
-		for _, t := range s.GetMetrics() {
-			metrics = append(metrics, t)
-		}
+		metrics = append(metrics, s.GetMetrics()...)
 	}
 	size := len(metrics)
 	ps.logger.Info(fmt.Sprintf("Metrics len:%d", size))

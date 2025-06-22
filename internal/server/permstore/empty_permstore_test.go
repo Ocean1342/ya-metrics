@@ -20,11 +20,14 @@ func initEmptyPermStore(t *testing.T) PermanentStorable {
 	}
 	defer logger.Sync()
 	sugar := logger.Sugar()
-
-	err = os.Truncate(path, 0)
-
-	if err != nil {
-		t.Fatalf("could not truncate file:%s; Error:%s", path, err)
+	stat, err := os.Stat(path)
+	if err == nil {
+		if stat.Size() > 0 {
+			err = os.Truncate(path, 0)
+		}
+		if err != nil {
+			t.Fatalf("could not truncate file:%s; Error:%s", path, err)
+		}
 	}
 
 	permStoreOptions := config.PermStoreOptions{

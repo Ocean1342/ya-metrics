@@ -31,24 +31,22 @@ func main() {
 			panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
 		}
 	}
-	sigCh := make(chan os.Signal)
+	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	//принудительная выгрузка при завершении работы
 	go func() {
-		for {
-			select {
-			case v, ok := <-sigCh:
-				err := permStore.PutDataToPermStore()
-				if err != nil {
-					panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
-				}
-				if ok {
-					switch v {
-					case syscall.SIGINT:
-						os.Exit(int(syscall.SIGINT))
-					case syscall.SIGTERM:
-						os.Exit(int(syscall.SIGTERM))
-					}
+		select {
+		case v, ok := <-sigCh:
+			err := permStore.PutDataToPermStore()
+			if err != nil {
+				panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
+			}
+			if ok {
+				switch v {
+				case syscall.SIGINT:
+					os.Exit(int(syscall.SIGINT))
+				case syscall.SIGTERM:
+					os.Exit(int(syscall.SIGTERM))
 				}
 			}
 		}
