@@ -35,19 +35,17 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	//принудительная выгрузка при завершении работы
 	go func() {
-		select {
-		case v, ok := <-sigCh:
-			err := permStore.PutDataToPermStore()
-			if err != nil {
-				panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
-			}
-			if ok {
-				switch v {
-				case syscall.SIGINT:
-					os.Exit(int(syscall.SIGINT))
-				case syscall.SIGTERM:
-					os.Exit(int(syscall.SIGTERM))
-				}
+		v, ok := <-sigCh
+		err := permStore.PutDataToPermStore()
+		if err != nil {
+			panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
+		}
+		if ok {
+			switch v {
+			case syscall.SIGINT:
+				os.Exit(int(syscall.SIGINT))
+			case syscall.SIGTERM:
+				os.Exit(int(syscall.SIGTERM))
 			}
 		}
 	}()
