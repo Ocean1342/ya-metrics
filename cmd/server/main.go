@@ -18,12 +18,6 @@ import (
 
 var sugar *zap.SugaredLogger
 
-//TODO:
-//	    -1 - реализовать выгрузку по завершению приложения, done
-//		0 - продумать передачу метрик при синхронном режиме
-//		1 - реализация новых хранилищ
-//		2 - реализация интерфейса PermanentStorable
-
 func main() {
 	initLogger()
 	cfg := config.InitConfig()
