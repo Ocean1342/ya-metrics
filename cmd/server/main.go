@@ -20,13 +20,13 @@ var sugar *zap.SugaredLogger
 
 func main() {
 	initLogger()
-	cfg := config.InitConfig()
+	cfg := config.New()
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	//init perm store
-	permStore := permstore.NewPermStore(context.TODO(), sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
+	permStore := permstore.New(context.TODO(), sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	if cfg.PermStoreOptions.RestoreOnStart {
-		err := permStore.ExtractFromPermStore()
+		err := permStore.Extract()
 		if err != nil {
 			panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
 		}
@@ -36,7 +36,7 @@ func main() {
 	//принудительная выгрузка при завершении работы
 	go func() {
 		v, ok := <-sigCh
-		err := permStore.PutDataToPermStore()
+		err := permStore.Put()
 		if err != nil {
 			panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
 		}
@@ -50,12 +50,13 @@ func main() {
 		}
 	}()
 
+	handlers := shandler.New(gaugeStorage, countStorage, mdata.InitMetrics())
 	routes := server.Routes{
-		"/":                             shandler.NewGetListHandler(gaugeStorage, countStorage).ServeHTTP,
-		"/update/{type}/{name}/{value}": shandler.NewUpdateHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
-		"/value/{type}/{name}":          shandler.NewGetHandler(mdata.InitMetrics(), gaugeStorage, countStorage).ServeHTTP,
-		"/update/":                      shandler.NewJSONUpdateHandler(gaugeStorage, countStorage).ServeHTTP,
-		"/value/":                       shandler.NewGetJSONMetricsHandler(gaugeStorage, countStorage).ServeHTTP,
+		"/":                             handlers[shandler.GetListRoute].ServeHTTP,
+		"/update/{type}/{name}/{value}": handlers[shandler.UpdateByURLParams].ServeHTTP,
+		"/value/{type}/{name}":          handlers[shandler.GetByURLParams].ServeHTTP,
+		"/update/":                      handlers[shandler.UpdateByJSON].ServeHTTP,
+		"/value/":                       handlers[shandler.GetByJSON].ServeHTTP,
 	}
 
 	s := server.NewChiServeable(cfg, routes, initMiddlewares())

@@ -8,13 +8,6 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-func NewGetJSONMetricsHandler(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage) *GetJSONMetricsHandler {
-	return &GetJSONMetricsHandler{
-		gaugeStorage: gaugeStorage,
-		countStorage: countStorage,
-	}
-}
-
 type GetJSONMetricsHandler struct {
 	gaugeStorage server_storage.GaugeStorage
 	countStorage server_storage.CounterStorage

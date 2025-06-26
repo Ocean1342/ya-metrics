@@ -37,12 +37,12 @@ func initEmptyPermStore(t *testing.T) PermanentStorable {
 	}
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
-	return NewPermStore(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
+	return New(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
 }
 
 func TestEmptyPutData(t *testing.T) {
 	s := initEmptyPermStore(t)
-	assert.NoError(t, s.PutDataToPermStore())
+	assert.NoError(t, s.Put())
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		t.Error(err)

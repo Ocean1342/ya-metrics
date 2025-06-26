@@ -11,13 +11,6 @@ type GetList struct {
 	countStorage server_storage.CounterStorage
 }
 
-func NewGetListHandler(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage) *GetList {
-	return &GetList{
-		gaugeStorage: gaugeStorage,
-		countStorage: countStorage,
-	}
-}
-
 func (gl *GetList) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)

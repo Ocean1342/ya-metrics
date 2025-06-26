@@ -8,18 +8,6 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-func NewGetHandler(
-	amt mdata.AvailableMetricsTypes,
-	gaugeStorage server_storage.GaugeStorage,
-	countStorage server_storage.CounterStorage,
-) *GetHandler {
-	return &GetHandler{
-		AvailableMetricsTypes: amt,
-		gaugeStorage:          gaugeStorage,
-		countStorage:          countStorage,
-	}
-}
-
 type GetHandler struct {
 	AvailableMetricsTypes mdata.AvailableMetricsTypes
 	gaugeStorage          server_storage.GaugeStorage

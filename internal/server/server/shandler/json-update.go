@@ -14,16 +14,6 @@ type JSONUpdateHandler struct {
 	countStorage server_storage.CounterStorage
 }
 
-func NewJSONUpdateHandler(
-	gaugeStorage server_storage.GaugeStorage,
-	countStorage server_storage.CounterStorage,
-) *JSONUpdateHandler {
-	return &JSONUpdateHandler{
-		gaugeStorage,
-		countStorage,
-	}
-}
-
 func (j *JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)

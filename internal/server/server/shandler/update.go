@@ -15,18 +15,6 @@ type UpdateRequest struct {
 	Value string
 }
 
-func NewUpdateHandler(
-	amt mdata.AvailableMetricsTypes,
-	gaugeStorage server_storage.GaugeStorage,
-	countStorage server_storage.CounterStorage,
-) *UpdateHandler {
-	return &UpdateHandler{
-		AvailableMetricsTypes: amt,
-		gaugeStorage:          gaugeStorage,
-		countStorage:          countStorage,
-	}
-}
-
 type UpdateHandler struct {
 	AvailableMetricsTypes mdata.AvailableMetricsTypes
 	gaugeStorage          server_storage.GaugeStorage

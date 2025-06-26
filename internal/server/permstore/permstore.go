@@ -22,11 +22,11 @@ type PermStore struct {
 
 type PermanentStorable interface {
 	//метод достаёт данные из перманентного хранилища и помещает их в стораджи
-	ExtractFromPermStore() error
-	PutDataToPermStore() error
+	Extract() error
+	Put() error
 }
 
-func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.PermStoreOptions, st ...srvrstrg.StorableStorage) PermanentStorable {
+func New(_ context.Context, logger *zap.SugaredLogger, cfg *config.PermStoreOptions, st ...srvrstrg.StorableStorage) *PermStore {
 	//открыть файл
 	f, err := os.OpenFile(cfg.FileStoragePath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -49,7 +49,7 @@ func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.Perm
 				if _, ok := <-tick.C; !ok {
 					return
 				}
-				err = permStore.PutDataToPermStore()
+				err = permStore.Put()
 				if err != nil {
 					logger.Errorf("Error on put data to perm store on tick:%s", err)
 				}
@@ -60,8 +60,8 @@ func NewPermStore(_ context.Context, logger *zap.SugaredLogger, cfg *config.Perm
 	return &permStore
 }
 
-func (ps *PermStore) ExtractFromPermStore() error {
-	ps.logger.Info("ExtractFromPermStore")
+func (ps *PermStore) Extract() error {
+	ps.logger.Info("Extract")
 	var metrics []mdata.Metrics
 	//смаршалить метрики
 	bytes, err := io.ReadAll(ps.file)
@@ -86,8 +86,8 @@ func (ps *PermStore) ExtractFromPermStore() error {
 	return nil
 }
 
-func (ps *PermStore) PutDataToPermStore() error {
-	ps.logger.Info("PutDataToPermStore")
+func (ps *PermStore) Put() error {
+	ps.logger.Info("Put")
 	var metrics []mdata.Metrics
 	err := ps.file.Truncate(0)
 	if err != nil {

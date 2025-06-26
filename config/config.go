@@ -21,7 +21,7 @@ type PermStoreOptions struct {
 	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
 }
 
-func InitConfig() *Config {
+func New() *Config {
 	//TODO: envы должны быть в приоритете
 	hostStr := flag.String("a", "localhost:8080", "server address")
 	storeInterval := flag.Int64("i", 300, "server address")

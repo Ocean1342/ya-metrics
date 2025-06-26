@@ -12,7 +12,7 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-func initFullFilledPermStore() PermanentStorable {
+func NewFullFilledPermStore() *PermStore {
 	logger, err := zap.NewProduction()
 	if err != nil {
 		panic("could not start logger")
@@ -37,22 +37,22 @@ func initFullFilledPermStore() PermanentStorable {
 	}
 	c := mdata.NewSimpleCounter("PollCount", 1)
 	_ = countStorage.Set(c)
-	return NewPermStore(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
+	return New(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
 }
 
 func TestNewPermStore_PutDataToPermStore_PositiveCase(t *testing.T) {
-	s := initFullFilledPermStore()
-	assert.NoError(t, s.PutDataToPermStore())
+	s := NewFullFilledPermStore()
+	assert.NoError(t, s.Put())
 }
 
 func TestPermStore_ExctractData(t *testing.T) {
-	s := initFullFilledPermStore()
-	s.PutDataToPermStore()
-	assert.NoError(t, s.ExtractFromPermStore())
+	s := NewFullFilledPermStore()
+	s.Put()
+	assert.NoError(t, s.Extract())
 }
 
 func TestPermStore_ExctractFrom(t *testing.T) {
-	s := initFullFilledPermStore()
-	s.PutDataToPermStore()
-	assert.NoError(t, s.ExtractFromPermStore())
+	s := NewFullFilledPermStore()
+	s.Put()
+	assert.NoError(t, s.Extract())
 }
