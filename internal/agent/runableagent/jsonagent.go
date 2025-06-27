@@ -1,8 +1,7 @@
-package runagent
+package runableagent
 
 import (
 	"bytes"
-	"compress/gzip"
 	"encoding/json"
 	"fmt"
 	"io"
@@ -12,9 +11,9 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type CompressJSONAgent struct{}
+type JSONAgent struct{}
 
-func (s *CompressJSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
+func (s *JSONAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	func() {
 		url := s.prepareURL(srvrAddr)
 		for _, m := range mgen.GenerateGaugeMetrics() {
@@ -54,66 +53,44 @@ func (s *CompressJSONAgent) Run(srvrAddr string, pCount int64, reportIntervalSec
 	}()
 }
 
-func (s *CompressJSONAgent) prepareURL(base string) string {
+func (s *JSONAgent) prepareURL(base string) string {
 	return fmt.Sprintf("%s/update/", base)
 }
 
-func (s *CompressJSONAgent) compressData(in []byte) ([]byte, error) {
-	b := bytes.NewBuffer([]byte{})
-	w := gzip.NewWriter(b)
-	_, err := w.Write(in)
-	if err != nil {
-		return nil, err
-	}
-	err = w.Close()
-	if err != nil {
-		return nil, err
-	}
-	return b.Bytes(), nil
-}
-
-func (s *CompressJSONAgent) counterRequestPrepare(c mdata.Counter, url string, method string) (*http.Request, error) {
+func (s *JSONAgent) counterRequestPrepare(c mdata.Counter, url string, method string) (*http.Request, error) {
 	value := c.GetValue()
 	metric := mdata.Metrics{ID: c.GetName(), MType: c.GetType(), Delta: &value}
 	j, err := json.Marshal(metric)
 	if err != nil {
 		return nil, err
 	}
-	compressed, err := s.compressData(j)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(compressed))
+
+	req, err := http.NewRequest(method, url, bytes.NewBuffer(j))
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Content-Encoding", "gzip")
 	return req, nil
 }
 
-func (s *CompressJSONAgent) gaugeRequestPrepare(g mdata.Gauge, url string, method string) (*http.Request, error) {
+func (s *JSONAgent) gaugeRequestPrepare(g mdata.Gauge, url string, method string) (*http.Request, error) {
 	value := g.GetValue()
 	data, err := json.Marshal(mdata.Metrics{ID: g.GetName(), MType: g.GetType(), Value: &value})
+	b := bytes.NewBuffer(data)
 	if err != nil {
 		return nil, err
 	}
-	compressed, err := s.compressData(data)
-	if err != nil {
-		return nil, err
-	}
-	req, err := http.NewRequest(method, url, bytes.NewBuffer(compressed))
+	req, err := http.NewRequest(method, url, b)
 	if err != nil {
 		fmt.Println("Error creating request:", err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
-	req.Header.Add("Content-Encoding", "gzip")
 	return req, nil
 }
 
-func (s *CompressJSONAgent) sendRequest(req *http.Request) *http.Response {
+func (s *JSONAgent) sendRequest(req *http.Request) *http.Response {
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
@@ -124,7 +101,7 @@ func (s *CompressJSONAgent) sendRequest(req *http.Request) *http.Response {
 	return resp
 }
 
-func (s *CompressJSONAgent) responseAnalyze(resp *http.Response) error {
+func (s *JSONAgent) responseAnalyze(resp *http.Response) error {
 	if resp == nil {
 		return fmt.Errorf("nil response")
 	}

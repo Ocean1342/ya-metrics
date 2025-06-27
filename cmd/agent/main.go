@@ -7,7 +7,7 @@ import (
 	"os"
 	"strconv"
 	"time"
-	"ya-metrics/internal/agent/runagent"
+	"ya-metrics/internal/agent/runableagent"
 )
 
 func main() {
@@ -36,9 +36,10 @@ func main() {
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
-	c := runagent.CompressJSONAgent{}
-	j := runagent.JSONAgent{}
-	a := runagent.SimpleAgent{}
+	c := runableagent.CompressJSONAgent{}
+	//j := runableagent.JSONAgent{} //TODO: удалить
+	a := runableagent.SimpleAgent{}
+
 	//TODO: костыль, чтобы дать время серверу подняться
 	time.Sleep(5 * time.Second)
 	for {
@@ -47,9 +48,9 @@ func main() {
 			fmt.Println("shutting down")
 			return
 		default:
-			c.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-			j.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-			a.Run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			c.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			//j.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			a.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
 	}
 }

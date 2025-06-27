@@ -1,4 +1,4 @@
-package runagent
+package runableagent
 
 import (
 	"bytes"
@@ -12,7 +12,7 @@ import (
 
 type SimpleAgent struct{}
 
-func (s *SimpleAgent) Run(srvrAddr string, pCount int64, reportIntervalSec int) {
+func (s *SimpleAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	func() {
 		buffer := bytes.NewBuffer([]byte(""))
 		for _, m := range mgen.GenerateGaugeMetrics() {

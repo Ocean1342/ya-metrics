@@ -11,7 +11,7 @@ import (
 	"ya-metrics/internal/server/permstore"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
-	"ya-metrics/internal/server/server/shandler"
+	"ya-metrics/internal/server/server/handlers"
 	"ya-metrics/pkg/mdata"
 	"ya-metrics/pkg/middlewares"
 )
@@ -50,13 +50,13 @@ func main() {
 		}
 	}()
 
-	handlers := shandler.New(gaugeStorage, countStorage, mdata.InitMetrics())
+	h := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics())
 	routes := server.Routes{
-		"/":                             handlers[shandler.GetListRoute].ServeHTTP,
-		"/update/{type}/{name}/{value}": handlers[shandler.UpdateByURLParams].ServeHTTP,
-		"/value/{type}/{name}":          handlers[shandler.GetByURLParams].ServeHTTP,
-		"/update/":                      handlers[shandler.UpdateByJSON].ServeHTTP,
-		"/value/":                       handlers[shandler.GetByJSON].ServeHTTP,
+		"/":                             h[handlers.GetListRoute].ServeHTTP,
+		"/update/{type}/{name}/{value}": h[handlers.UpdateByURLParams].ServeHTTP,
+		"/value/{type}/{name}":          h[handlers.GetByURLParams].ServeHTTP,
+		"/update/":                      h[handlers.UpdateByJSON].ServeHTTP,
+		"/value/":                       h[handlers.GetByJSON].ServeHTTP,
 	}
 
 	s := server.NewChiServeable(cfg, routes, initMiddlewares())
