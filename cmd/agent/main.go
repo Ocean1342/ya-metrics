@@ -36,9 +36,8 @@ func main() {
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
-	c := runableagent.CompressJSONAgent{}
-	//j := runableagent.JSONAgent{} //TODO: удалить
-	a := runableagent.SimpleAgent{}
+	jsonAgent := runableagent.CompressJSONAgent{}
+	simpleAgent := runableagent.SimpleAgent{}
 
 	//TODO: костыль, чтобы дать время серверу подняться
 	time.Sleep(5 * time.Second)
@@ -48,9 +47,8 @@ func main() {
 			fmt.Println("shutting down")
 			return
 		default:
-			c.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-			//j.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-			a.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			jsonAgent.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
+			simpleAgent.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
 		}
 	}
 }
