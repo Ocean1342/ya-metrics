@@ -63,9 +63,9 @@ func TestUpdateHandler_validateUpdateRequest(t *testing.T) {
 	}
 }
 
-func initUpdateHandler(fields Fields) *UpdateHandler {
-	return &UpdateHandler{
-		AvailableMetricsTypes: fields.AvailableMetricsTypes,
+func initUpdateHandler(fields Fields) *Handler {
+	return &Handler{
+		availableMetricsTypes: fields.AvailableMetricsTypes,
 		gaugeStorage:          fields.gaugeStorage,
 		countStorage:          fields.countStorage,
 	}

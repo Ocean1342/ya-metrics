@@ -52,12 +52,12 @@ func TestGetHandler_ServeHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gh := &GetHandler{
-				AvailableMetricsTypes: tt.fields.AvailableMetricsTypes,
+			gh := &Handler{
+				availableMetricsTypes: tt.fields.AvailableMetricsTypes,
 				gaugeStorage:          tt.fields.gaugeStorage,
 				countStorage:          tt.fields.countStorage,
 			}
-			gh.ServeHTTP(tt.args.w, tt.args.r)
+			gh.Get(tt.args.w, tt.args.r)
 			res := tt.args.w.Result()
 			defer res.Body.Close()
 			assert.Equal(t, tt.want.code, res.StatusCode)

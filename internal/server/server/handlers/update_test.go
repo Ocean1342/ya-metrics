@@ -82,12 +82,12 @@ func TestUpdateHandler(t *testing.T) {
 			//новый ридер
 			nr := httptest.NewRecorder()
 			//дёрнуть хендлер
-			uh := &UpdateHandler{
-				AvailableMetricsTypes: tt.fields.AvailableMetricsTypes,
+			uh := &Handler{
+				availableMetricsTypes: tt.fields.AvailableMetricsTypes,
 				gaugeStorage:          tt.fields.gaugeStorage,
 				countStorage:          tt.fields.countStorage,
 			}
-			uh.ServeHTTP(nr, req)
+			uh.Update(nr, req)
 			//nr получить результ
 			res := nr.Result()
 			defer res.Body.Close()

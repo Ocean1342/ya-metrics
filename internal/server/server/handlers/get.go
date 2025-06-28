@@ -14,19 +14,19 @@ type GetHandler struct {
 	countStorage          server_storage.CounterStorage
 }
 
-func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
 		return
 	}
 	typeName := chi.URLParam(r, "type")
 
-	if !gh.AvailableMetricsTypes.Isset(typeName) {
+	if !h.availableMetricsTypes.Isset(typeName) {
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 	name := chi.URLParam(r, "name")
-	g := gh.gaugeStorage.Get(name)
+	g := h.gaugeStorage.Get(name)
 	if g != nil {
 		w.WriteHeader(http.StatusOK)
 		_, err := w.Write([]byte(fmt.Sprintf("%v", g.GetValue())))
@@ -36,7 +36,7 @@ func (gh *GetHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		}
 		return
 	}
-	c, err := gh.countStorage.Get(name)
+	c, err := h.countStorage.Get(name)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return

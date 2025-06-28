@@ -4,16 +4,10 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
 )
 
-type GetJSONMetricsHandler struct {
-	gaugeStorage server_storage.GaugeStorage
-	countStorage server_storage.CounterStorage
-}
-
-func (g *GetJSONMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) GetByJSON(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
 		return
@@ -24,7 +18,7 @@ func (g *GetJSONMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Reque
 		http.Error(w, "Could not decode request body", http.StatusMethodNotAllowed)
 		return
 	}
-	m, err := g.getMetric(&getReq)
+	m, err := h.getMetric(&getReq)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("id: %s, mtype: %s not found", getReq.ID, getReq.MType), http.StatusNotFound)
 		return
@@ -39,10 +33,10 @@ func (g *GetJSONMetricsHandler) ServeHTTP(w http.ResponseWriter, req *http.Reque
 	w.Write(data)
 }
 
-func (g *GetJSONMetricsHandler) getMetric(getReq *mdata.Metrics) (*mdata.Metrics, error) {
+func (h *Handler) getMetric(getReq *mdata.Metrics) (*mdata.Metrics, error) {
 	switch getReq.MType {
 	case mdata.GAUGE:
-		v := g.gaugeStorage.Get(getReq.ID)
+		v := h.gaugeStorage.Get(getReq.ID)
 		if v == nil {
 			return nil, fmt.Errorf("id: %s, mtype: %s not found", getReq.ID, getReq.MType)
 		}
@@ -53,7 +47,7 @@ func (g *GetJSONMetricsHandler) getMetric(getReq *mdata.Metrics) (*mdata.Metrics
 			Value: &value,
 		}, nil
 	case mdata.COUNTER:
-		v, err := g.countStorage.Get(getReq.ID)
+		v, err := h.countStorage.Get(getReq.ID)
 		if err != nil || v == nil {
 			return nil, fmt.Errorf("id: %s, mtype: %s not found", getReq.ID, getReq.MType)
 		}

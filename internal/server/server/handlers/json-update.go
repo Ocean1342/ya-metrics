@@ -5,16 +5,10 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
 )
 
-type JSONUpdateHandler struct {
-	gaugeStorage server_storage.GaugeStorage
-	countStorage server_storage.CounterStorage
-}
-
-func (j *JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) {
+func (h *Handler) UpdateByJSON(w http.ResponseWriter, req *http.Request) {
 	if req.Method != http.MethodPost {
 		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, "Only POST method is allowed", http.StatusMethodNotAllowed)
@@ -28,13 +22,13 @@ func (j *JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 		return
 	}
 
-	err = j.saveData(&mReq)
+	err = h.saveJSONData(&mReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		http.Error(w, fmt.Sprintf("Could not save data: %s", err), http.StatusBadRequest)
 		return
 	}
-	updVal, err := j.getUpdatedData(&mReq)
+	updVal, err := h.getUpdatedData(&mReq)
 	if err != nil {
 		http.Error(w, fmt.Sprintf("Could not get updated data: %s", err), http.StatusInternalServerError)
 		return
@@ -49,13 +43,13 @@ func (j *JSONUpdateHandler) ServeHTTP(w http.ResponseWriter, req *http.Request) 
 	w.Write(response)
 }
 
-func (j *JSONUpdateHandler) saveData(mReq *mdata.Metrics) error {
+func (h *Handler) saveJSONData(mReq *mdata.Metrics) error {
 	switch mReq.MType {
 	case mdata.COUNTER:
 		if mReq.Delta == nil {
 			return fmt.Errorf("еmpty %s value", mReq.MType)
 		}
-		err := j.countStorage.Set(mdata.NewSimpleCounter(mReq.ID, *mReq.Delta))
+		err := h.countStorage.Set(mdata.NewSimpleCounter(mReq.ID, *mReq.Delta))
 		fmt.Println("Received: Counter", mReq.ID, *mReq.Delta)
 		if err != nil {
 			return fmt.Errorf("could not save data in storage")
@@ -64,7 +58,7 @@ func (j *JSONUpdateHandler) saveData(mReq *mdata.Metrics) error {
 		if mReq.Value == nil {
 			return fmt.Errorf("еmpty %s value", mReq.MType)
 		}
-		err := j.gaugeStorage.Set(mdata.NewSimpleGauge(mReq.ID, *mReq.Value))
+		err := h.gaugeStorage.Set(mdata.NewSimpleGauge(mReq.ID, *mReq.Value))
 		fmt.Println("Received: Gauge", mReq.ID, *mReq.Value)
 		if err != nil {
 			return fmt.Errorf("could not save %s data in storage", mdata.GAUGE)
@@ -76,10 +70,10 @@ func (j *JSONUpdateHandler) saveData(mReq *mdata.Metrics) error {
 	return nil
 }
 
-func (j *JSONUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
+func (h *Handler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
 	switch mReq.MType {
 	case mdata.COUNTER:
-		v, err := j.countStorage.Get(mReq.ID)
+		v, err := h.countStorage.Get(mReq.ID)
 		if err != nil {
 			return nil, err
 		}
@@ -90,7 +84,7 @@ func (j *JSONUpdateHandler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics,
 			Delta: &delta,
 		}, nil
 	case mdata.GAUGE:
-		v := j.gaugeStorage.Get(mReq.ID)
+		v := h.gaugeStorage.Get(mReq.ID)
 		if v == nil {
 			return nil, fmt.Errorf("not found delta with id: %s", mReq.ID)
 		}

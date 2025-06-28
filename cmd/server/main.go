@@ -52,13 +52,12 @@ func main() {
 
 	h := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics())
 	routes := server.Routes{
-		"/":                             h[handlers.GetListRoute].ServeHTTP,
-		"/update/{type}/{name}/{value}": h[handlers.UpdateByURLParams].ServeHTTP,
-		"/value/{type}/{name}":          h[handlers.GetByURLParams].ServeHTTP,
-		"/update/":                      h[handlers.UpdateByJSON].ServeHTTP,
-		"/value/":                       h[handlers.GetByJSON].ServeHTTP,
+		"/":                             h.GetList,
+		"/update/{type}/{name}/{value}": h.Update,
+		"/value/{type}/{name}":          h.Get,
+		"/update/":                      h.UpdateByJSON,
+		"/value/":                       h.GetByJSON,
 	}
-
 	s := server.NewChiServeable(cfg, routes, initMiddlewares())
 	s.Start()
 }

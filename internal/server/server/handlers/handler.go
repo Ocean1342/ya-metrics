@@ -14,29 +14,16 @@ const GetByURLParams = "getByURLParams"
 const UpdateByJSON = "updateByJSON"
 const GetByJSON = "getByJSON"
 
-func New(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage, mTypes mdata.AvailableMetricsTypes) map[string]http.Handler {
-	return Handlers{
-		GetListRoute: &GetList{
-			gaugeStorage: gaugeStorage,
-			countStorage: countStorage,
-		},
-		UpdateByURLParams: &UpdateHandler{
-			AvailableMetricsTypes: mTypes,
-			gaugeStorage:          gaugeStorage,
-			countStorage:          countStorage,
-		},
-		GetByURLParams: &GetHandler{
-			AvailableMetricsTypes: mTypes,
-			gaugeStorage:          gaugeStorage,
-			countStorage:          countStorage,
-		},
-		UpdateByJSON: &JSONUpdateHandler{
-			gaugeStorage,
-			countStorage,
-		},
-		GetByJSON: &GetJSONMetricsHandler{
-			gaugeStorage: gaugeStorage,
-			countStorage: countStorage,
-		},
+type Handler struct {
+	availableMetricsTypes mdata.AvailableMetricsTypes
+	gaugeStorage          server_storage.GaugeStorage
+	countStorage          server_storage.CounterStorage
+}
+
+func New(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage, mTypes mdata.AvailableMetricsTypes) *Handler {
+	return &Handler{
+		availableMetricsTypes: mTypes,
+		gaugeStorage:          gaugeStorage,
+		countStorage:          countStorage,
 	}
 }
