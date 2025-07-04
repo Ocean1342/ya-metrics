@@ -1,7 +1,6 @@
 package permstore
 
 import (
-	"context"
 	"encoding/json"
 	"fmt"
 	"go.uber.org/zap"
@@ -23,10 +22,10 @@ type PermStore struct {
 type PermanentStorable interface {
 	//метод достаёт данные из перманентного хранилища и помещает их в стораджи
 	Extract() error
-	Put() error
+	Dump() error
 }
 
-func New(_ context.Context, logger *zap.SugaredLogger, cfg *config.PermStoreOptions, st ...srvrstrg.StorableStorage) *PermStore {
+func New(logger *zap.SugaredLogger, cfg *config.PermStoreOptions, st ...srvrstrg.StorableStorage) *PermStore {
 	//открыть файл
 	f, err := os.OpenFile(cfg.FileStoragePath, os.O_CREATE|os.O_RDWR, 0644)
 	if err != nil {
@@ -49,14 +48,19 @@ func New(_ context.Context, logger *zap.SugaredLogger, cfg *config.PermStoreOpti
 				if _, ok := <-tick.C; !ok {
 					return
 				}
-				err = permStore.Put()
+				err = permStore.Dump()
 				if err != nil {
 					logger.Errorf("Error on put data to perm store on tick:%s", err)
 				}
 			}
 		}()
 	}
-
+	if cfg.RestoreOnStart {
+		err := permStore.Extract()
+		if err != nil {
+			panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
+		}
+	}
 	return &permStore
 }
 
@@ -86,8 +90,8 @@ func (ps *PermStore) Extract() error {
 	return nil
 }
 
-func (ps *PermStore) Put() error {
-	ps.logger.Info("Put")
+func (ps *PermStore) Dump() error {
+	ps.logger.Info("Dump")
 	var metrics []mdata.Metrics
 	err := ps.file.Truncate(0)
 	if err != nil {

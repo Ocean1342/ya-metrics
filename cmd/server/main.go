@@ -1,9 +1,10 @@
 package main
 
 import (
-	"context"
 	"fmt"
+	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
+	"log"
 	"os"
 	"os/signal"
 	"syscall"
@@ -14,6 +15,7 @@ import (
 	"ya-metrics/internal/server/server/handlers"
 	"ya-metrics/pkg/mdata"
 	"ya-metrics/pkg/middlewares"
+	"ya-metrics/pkg/postgres"
 )
 
 var sugar *zap.SugaredLogger
@@ -21,44 +23,37 @@ var sugar *zap.SugaredLogger
 func main() {
 	initLogger()
 	cfg := config.New()
+	pg, err := postgres.New(cfg.DBURL)
+	if err != nil {
+		log.Fatalf("could not start db.err:%s", err)
+	}
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	//init perm store
-	permStore := permstore.New(context.TODO(), sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
-	if cfg.PermStoreOptions.RestoreOnStart {
-		err := permStore.Extract()
-		if err != nil {
-			panic(fmt.Sprintf("panic on extract data from perm store on exit. err:%s", err))
-		}
-	}
+	permStore := permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	//принудительная выгрузка при завершении работы
 	go func() {
 		v, ok := <-sigCh
-		err := permStore.Put()
+		err := permStore.Dump()
 		if err != nil {
 			panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
 		}
 		if ok {
 			switch v {
 			case syscall.SIGINT:
+				pg.Close()
 				os.Exit(int(syscall.SIGINT))
 			case syscall.SIGTERM:
+				pg.Close()
 				os.Exit(int(syscall.SIGTERM))
 			}
 		}
 	}()
 
-	h := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics())
-	routes := server.Routes{
-		"/":                             h.GetList,
-		"/update/{type}/{name}/{value}": h.Update,
-		"/value/{type}/{name}":          h.Get,
-		"/update/":                      h.UpdateByJSON,
-		"/value/":                       h.GetByJSON,
-	}
-	s := server.NewChiServeable(cfg, routes, initMiddlewares())
+	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg)
+	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(sugar))
 	s.Start()
 }
 
@@ -69,13 +64,4 @@ func initLogger() {
 	}
 	defer logger.Sync()
 	sugar = logger.Sugar()
-}
-
-func initMiddlewares() []server.Middleware {
-	return []server.Middleware{
-		middlewares.NewLogResponseMiddleware(sugar),
-		middlewares.NewCompressResponseMiddleware(),
-		middlewares.NewLogRequestMiddleware(sugar),
-		middlewares.NewDecompressRequestMiddleware(),
-	}
 }

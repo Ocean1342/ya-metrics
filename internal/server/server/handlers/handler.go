@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"database/sql"
 	"net/http"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -8,22 +9,23 @@ import (
 
 type Handlers map[string]http.Handler
 
-const GetListRoute = "getList"
-const UpdateByURLParams = "updateByURLParams"
-const GetByURLParams = "getByURLParams"
-const UpdateByJSON = "updateByJSON"
-const GetByJSON = "getByJSON"
-
 type Handler struct {
 	availableMetricsTypes mdata.AvailableMetricsTypes
 	gaugeStorage          server_storage.GaugeStorage
 	countStorage          server_storage.CounterStorage
+	db                    *sql.DB
 }
 
-func New(gaugeStorage server_storage.GaugeStorage, countStorage server_storage.CounterStorage, mTypes mdata.AvailableMetricsTypes) *Handler {
+func New(
+	gaugeStorage server_storage.GaugeStorage,
+	countStorage server_storage.CounterStorage,
+	mTypes mdata.AvailableMetricsTypes,
+	db *sql.DB,
+) *Handler {
 	return &Handler{
 		availableMetricsTypes: mTypes,
 		gaugeStorage:          gaugeStorage,
 		countStorage:          countStorage,
+		db:                    db,
 	}
 }

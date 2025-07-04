@@ -1,7 +1,6 @@
 package permstore
 
 import (
-	"context"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
 	"os"
@@ -37,12 +36,12 @@ func initEmptyPermStore(t *testing.T) PermanentStorable {
 	}
 	gaugeStorage := server_storage.NewSimpleGaugeStorage()
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
-	return New(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
+	return New(sugar, &permStoreOptions, gaugeStorage, countStorage)
 }
 
 func TestEmptyPutData(t *testing.T) {
 	s := initEmptyPermStore(t)
-	assert.NoError(t, s.Put())
+	assert.NoError(t, s.Dump())
 	f, err := os.OpenFile(path, os.O_RDONLY, 0644)
 	if err != nil {
 		t.Error(err)

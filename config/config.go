@@ -13,6 +13,7 @@ type Config struct {
 	Host             string            `json:"host"`
 	HostString       string            `json:"host_str"`
 	PermStoreOptions *PermStoreOptions `json:"perm_store_options"`
+	DBURL            string            `json:"db_url"`
 }
 
 type PermStoreOptions struct {
@@ -27,6 +28,8 @@ func New() *Config {
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
 	restoreOnStart := flag.Bool("r", false, "restore storage from file")
+	dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
+	dbURL := flag.String("d", dbDefaultString, "server address")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*hostStr = os.Getenv("ADDRESS")
@@ -40,6 +43,9 @@ func New() *Config {
 	}
 	if os.Getenv("FILE_STORAGE_PATH") != "" {
 		*fileStoragePath = os.Getenv("FILE_STORAGE_PATH")
+	}
+	if os.Getenv("DATABASE_DSN") != "" {
+		*dbURL = os.Getenv("DATABASE_DSN")
 	}
 	restoreEnv := os.Getenv("RESTORE")
 	if restoreEnv != "" {
@@ -63,5 +69,6 @@ func New() *Config {
 			FileStoragePath: *fileStoragePath,
 			RestoreOnStart:  *restoreOnStart,
 		},
+		DBURL: *dbURL,
 	}
 }

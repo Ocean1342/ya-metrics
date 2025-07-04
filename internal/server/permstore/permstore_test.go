@@ -42,17 +42,17 @@ func NewFullFilledPermStore() *PermStore {
 
 func TestNewPermStore_PutDataToPermStore_PositiveCase(t *testing.T) {
 	s := NewFullFilledPermStore()
-	assert.NoError(t, s.Put())
+	assert.NoError(t, s.Dump())
 }
 
 func TestPermStore_ExctractData(t *testing.T) {
 	s := NewFullFilledPermStore()
-	s.Put()
+	s.Dump()
 	assert.NoError(t, s.Extract())
 }
 
 func TestPermStore_ExctractFrom(t *testing.T) {
 	s := NewFullFilledPermStore()
-	s.Put()
+	s.Dump()
 	assert.NoError(t, s.Extract())
 }
