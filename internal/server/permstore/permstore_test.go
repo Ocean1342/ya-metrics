@@ -1,7 +1,6 @@
 package permstore
 
 import (
-	"context"
 	"fmt"
 	"github.com/stretchr/testify/assert"
 	"go.uber.org/zap"
@@ -37,7 +36,7 @@ func NewFullFilledPermStore() *PermStore {
 	}
 	c := mdata.NewSimpleCounter("PollCount", 1)
 	_ = countStorage.Set(c)
-	return New(context.TODO(), sugar, &permStoreOptions, gaugeStorage, countStorage)
+	return New(sugar, &permStoreOptions, gaugeStorage, countStorage)
 }
 
 func TestNewPermStore_PutDataToPermStore_PositiveCase(t *testing.T) {
