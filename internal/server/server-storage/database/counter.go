@@ -40,7 +40,7 @@ func (s *CounterDBStorage) Set(m mdata.Counter) error {
 		"UPDATE metrics SET delta =$1 WHERE mtype=$2 AND id = $3",
 		newVal,
 		mdata.COUNTER,
-		oldVal.GetName(),
+		m.GetName(),
 	)
 	if err != nil {
 		return err
