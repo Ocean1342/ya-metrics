@@ -11,7 +11,7 @@ import (
 	"ya-metrics/internal/server/permstore"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
-	"ya-metrics/internal/server/server-storage/dataBase"
+	"ya-metrics/internal/server/server-storage/database"
 	"ya-metrics/internal/server/server/handlers"
 	"ya-metrics/pkg/mdata"
 	"ya-metrics/pkg/middlewares"
@@ -34,8 +34,8 @@ func main() {
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	} else {
 		//TODO: новая реализация
-		gaugeStorage = dataBase.NewGauge(pg)
-		countStorage = dataBase.NewCounter(pg)
+		gaugeStorage = database.NewGauge(pg, sugar)
+		countStorage = database.NewCounter(pg, sugar)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	}
 

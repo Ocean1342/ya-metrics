@@ -1,7 +1,8 @@
-package dataBase
+package database
 
 import (
 	"database/sql"
+	"go.uber.org/zap"
 	"strconv"
 	srvrstrg "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -10,10 +11,11 @@ import (
 type CounterDBStorage struct {
 	db             *sql.DB
 	counterStorage srvrstrg.CounterStorage
+	log            *zap.SugaredLogger
 }
 
-func NewCounter(db *sql.DB) *CounterDBStorage {
-	return &CounterDBStorage{db: db, counterStorage: srvrstrg.NewSimpleCountStorage(mdata.NewSimpleCounter)}
+func NewCounter(db *sql.DB, log *zap.SugaredLogger) *CounterDBStorage {
+	return &CounterDBStorage{db: db, counterStorage: srvrstrg.NewSimpleCountStorage(mdata.NewSimpleCounter), log: log}
 }
 
 func (s *CounterDBStorage) Set(m mdata.Counter) error {
@@ -50,6 +52,9 @@ func (s *CounterDBStorage) GetList() map[string]string {
 		}
 		g[name] = strconv.Itoa(int(value))
 	}
+	if err := rows.Err(); err != nil {
+		s.log.Errorf("err on scan rows: %s", err)
+	}
 	return g
 }
 func (s *CounterDBStorage) GetMetrics() []mdata.Metrics {
@@ -75,6 +80,9 @@ func (s *CounterDBStorage) GetMetrics() []mdata.Metrics {
 			Delta: &delta,
 		}
 		i++
+	}
+	if err := rows.Err(); err != nil {
+		s.log.Errorf("err on scan rows: %s", err)
 	}
 	return md
 }

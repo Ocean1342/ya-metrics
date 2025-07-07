@@ -1,7 +1,8 @@
-package dataBase
+package database
 
 import (
 	"database/sql"
+	"go.uber.org/zap"
 	"strconv"
 	srvrstrg "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -11,10 +12,15 @@ type GaugeDBStorage struct {
 	db           *sql.DB
 	gaugeStorage srvrstrg.GaugeStorage
 	gaugeFactory func(name string, value float64) *mdata.GaugeMetric
+	log          *zap.SugaredLogger
 }
 
-func NewGauge(db *sql.DB) *GaugeDBStorage {
-	return &GaugeDBStorage{db: db, gaugeStorage: srvrstrg.NewSimpleGaugeStorage(), gaugeFactory: mdata.NewSimpleGauge}
+func NewGauge(db *sql.DB, log *zap.SugaredLogger) *GaugeDBStorage {
+	return &GaugeDBStorage{db: db,
+		gaugeStorage: srvrstrg.NewSimpleGaugeStorage(),
+		gaugeFactory: mdata.NewSimpleGauge,
+		log:          log,
+	}
 }
 
 func (s *GaugeDBStorage) Get(n string) mdata.Gauge {
@@ -53,6 +59,9 @@ func (s *GaugeDBStorage) GetList() map[string]string {
 		}
 		g[name] = strconv.Itoa(int(value))
 	}
+	if err := rows.Err(); err != nil {
+		s.log.Errorf("err on scan rows: %s", err)
+	}
 	return g
 }
 func (s *GaugeDBStorage) GetMetrics() []mdata.Metrics {
@@ -73,6 +82,9 @@ func (s *GaugeDBStorage) GetMetrics() []mdata.Metrics {
 			Value: &value,
 		}
 		i++
+	}
+	if err := rows.Err(); err != nil {
+		s.log.Errorf("err on scan rows: %s", err)
 	}
 	return md
 }

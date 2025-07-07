@@ -23,7 +23,7 @@ type PermStoreOptions struct {
 }
 
 func New() *Config {
-	hostStr := flag.String("a", "localhost:8081", "server address")
+	hostStr := flag.String("a", "localhost:8080", "server address")
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
 	restoreOnStart := flag.Bool("r", false, "restore storage from file")
