@@ -11,29 +11,56 @@ import (
 type CounterDBStorage struct {
 	db             *sql.DB
 	counterStorage srvrstrg.CounterStorage
+	factory        func(name string, value int64) mdata.Counter
 	log            *zap.SugaredLogger
 }
 
-func NewCounter(db *sql.DB, log *zap.SugaredLogger) *CounterDBStorage {
-	return &CounterDBStorage{db: db, counterStorage: srvrstrg.NewSimpleCountStorage(mdata.NewSimpleCounter), log: log}
+func NewCounter(db *sql.DB, log *zap.SugaredLogger, factory func(name string, value int64) mdata.Counter) *CounterDBStorage {
+	return &CounterDBStorage{db: db, counterStorage: srvrstrg.NewSimpleCountStorage(mdata.NewSimpleCounter), log: log, factory: factory}
 }
 
 func (s *CounterDBStorage) Set(m mdata.Counter) error {
-	s.db.Exec(
-		"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)",
-		m.GetName(), m.GetType(), m.GetValue(), nil,
+	var newVal int64
+	oldVal, err := s.Get(m.GetName())
+	if err != nil {
+		_, err := s.db.Exec(
+			"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)",
+			m.GetName(), m.GetType(), m.GetValue(), nil,
+		)
+		if err != nil {
+			return err
+		}
+	}
+	if oldVal == nil {
+		newVal = m.GetValue()
+	} else {
+		newVal = oldVal.GetValue() + m.GetValue()
+	}
+	_, err = s.db.Exec(
+		"UPDATE metrics SET value =$1 WHERE mtype=$2 AND id = $3",
+		newVal,
+		mdata.COUNTER,
+		oldVal.GetName(),
 	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func (s *CounterDBStorage) Get(n string) (mdata.Counter, error) {
-	var g mdata.SimpleCounter
-	row := s.db.QueryRow("SELECT * FROM metrics WHERE mtype=$1 AND id = $2", mdata.COUNTER, n)
-	err := row.Scan(&g)
+	var name string
+	var value sql.NullInt64
+
+	row := s.db.QueryRow("SELECT id, value FROM metrics WHERE mtype=$1 AND id = $2", mdata.COUNTER, n)
+	err := row.Scan(&name, &value)
 	if err != nil {
 		return nil, err
 	}
-	return &g, nil
+	if value.Valid {
+		return s.factory(name, value.Int64), nil
+	}
+	return s.factory(name, 0), nil
 }
 
 func (s *CounterDBStorage) GetList() map[string]string {

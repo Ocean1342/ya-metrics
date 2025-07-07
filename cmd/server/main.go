@@ -35,7 +35,7 @@ func main() {
 	} else {
 		//TODO: новая реализация
 		gaugeStorage = database.NewGauge(pg, sugar)
-		countStorage = database.NewCounter(pg, sugar)
+		countStorage = database.NewCounter(pg, sugar, mdata.NewSimpleCounter)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	}
 
@@ -51,13 +51,8 @@ func main() {
 		if ok {
 			switch v {
 			case syscall.SIGINT:
-				//TODO: завершение?
-				/*				if err = pg.Close(); err != nil {
-								zap.Error(err)
-							}*/
 				os.Exit(int(syscall.SIGINT))
 			case syscall.SIGTERM:
-				//pg.Close()
 				os.Exit(int(syscall.SIGTERM))
 			}
 		}
