@@ -23,13 +23,12 @@ type PermStoreOptions struct {
 }
 
 func New() *Config {
-	//TODO: envы должны быть в приоритете
 	hostStr := flag.String("a", "localhost:8080", "server address")
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
 	restoreOnStart := flag.Bool("r", false, "restore storage from file")
-	dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
-	dbURL := flag.String("d", dbDefaultString, "server address")
+	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
+	dbURL := flag.String("d", "", "server address")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*hostStr = os.Getenv("ADDRESS")

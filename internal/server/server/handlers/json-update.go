@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 	"ya-metrics/pkg/mdata"
 )
 
@@ -21,7 +22,7 @@ func (h *Handler) UpdateByJSON(w http.ResponseWriter, req *http.Request) {
 		http.Error(w, fmt.Sprintf("Wrong request body: %s", err), http.StatusBadRequest)
 		return
 	}
-
+	mReq.MType = strings.ToLower(mReq.MType)
 	err = h.saveJSONData(&mReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -47,7 +48,9 @@ func (h *Handler) saveJSONData(mReq *mdata.Metrics) error {
 	switch mReq.MType {
 	case mdata.COUNTER:
 		if mReq.Delta == nil {
-			return fmt.Errorf("еmpty %s value", mReq.MType)
+			zero := int64(0)
+			mReq.Delta = &zero
+			//return fmt.Errorf("еmpty %s value", mReq.MType)
 		}
 		err := h.countStorage.Set(mdata.NewSimpleCounter(mReq.ID, *mReq.Delta))
 		fmt.Println("Received: Counter", mReq.ID, *mReq.Delta)
@@ -91,7 +94,7 @@ func (h *Handler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
 		value := v.GetValue()
 		return &mdata.Metrics{
 			ID:    v.GetName(),
-			MType: mdata.COUNTER,
+			MType: mdata.GAUGE,
 			Value: &value,
 		}, nil
 
