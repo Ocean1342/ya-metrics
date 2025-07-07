@@ -23,7 +23,7 @@ func NewSimpleGauge(name string, value float64) *GaugeMetric {
 	metric := GaugeMetric{
 		name:     name,
 		value:    value,
-		typeName: "jopa" + GAUGE,
+		typeName: GAUGE,
 	}
 	fmt.Println(metric)
 	return &metric
