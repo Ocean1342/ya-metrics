@@ -91,7 +91,7 @@ func (h *Handler) getUpdatedData(mReq *mdata.Metrics) (*mdata.Metrics, error) {
 		value := v.GetValue()
 		return &mdata.Metrics{
 			ID:    v.GetName(),
-			MType: mdata.COUNTER,
+			MType: mdata.GAUGE,
 			Value: &value,
 		}, nil
 

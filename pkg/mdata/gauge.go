@@ -1,12 +1,14 @@
 package mdata
 
+import "fmt"
+
 type Gauge interface {
 	GetValue() float64
 	GetName() string
 	GetType() string
 }
 
-type SimpleGauge struct {
+type GaugeMetric struct {
 	name     string
 	value    float64
 	typeName string
@@ -17,22 +19,24 @@ type GaugeFactory interface {
 	NewGauge(name string, value float64) Gauge
 }
 
-func NewSimpleGauge(name string, value float64) *SimpleGauge {
-	return &SimpleGauge{
+func NewSimpleGauge(name string, value float64) *GaugeMetric {
+	metric := GaugeMetric{
 		name:     name,
 		value:    value,
-		typeName: GAUGE,
+		typeName: "jopa" + GAUGE,
 	}
+	fmt.Println(metric)
+	return &metric
 }
 
-func (g *SimpleGauge) GetValue() float64 {
+func (g *GaugeMetric) GetValue() float64 {
 	return g.value
 }
 
-func (g *SimpleGauge) GetName() string {
+func (g *GaugeMetric) GetName() string {
 	return g.name
 }
 
-func (g *SimpleGauge) GetType() string {
+func (g *GaugeMetric) GetType() string {
 	return g.typeName
 }
