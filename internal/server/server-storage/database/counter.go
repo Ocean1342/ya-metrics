@@ -37,7 +37,7 @@ func (s *CounterDBStorage) Set(m mdata.Counter) error {
 		newVal = oldVal.GetValue() + m.GetValue()
 	}
 	_, err = s.db.Exec(
-		"UPDATE metrics SET value =$1 WHERE mtype=$2 AND id = $3",
+		"UPDATE metrics SET delta =$1 WHERE mtype=$2 AND id = $3",
 		newVal,
 		mdata.COUNTER,
 		oldVal.GetName(),
@@ -52,7 +52,7 @@ func (s *CounterDBStorage) Get(n string) (mdata.Counter, error) {
 	var name string
 	var value sql.NullInt64
 
-	row := s.db.QueryRow("SELECT id, value FROM metrics WHERE mtype=$1 AND id = $2", mdata.COUNTER, n)
+	row := s.db.QueryRow("SELECT id, delta FROM metrics WHERE mtype=$1 AND id = $2", mdata.COUNTER, n)
 	err := row.Scan(&name, &value)
 	if err != nil {
 		return nil, err
