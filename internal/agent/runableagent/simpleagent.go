@@ -13,45 +13,43 @@ import (
 type SimpleAgent struct{}
 
 func (s *SimpleAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
-	func() {
-		buffer := bytes.NewBuffer([]byte(""))
-		for _, m := range mgen.GenerateGaugeMetrics() {
-			url := s.prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
-			req, err := s.requestPrepare(url, http.MethodPost, buffer)
-			if err != nil {
-				fmt.Println(err)
-				continue
-			}
-			resp := s.sendRequest(req)
-			if resp == nil {
-				continue
-			}
-			defer resp.Body.Close()
-			err = s.responseAnalyze(resp)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-		pCount++
-		c := mdata.NewSimpleCounter("PollCount", pCount)
-		url := s.prepareURLCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
+	buffer := bytes.NewBuffer([]byte(""))
+	for _, m := range mgen.GenerateGaugeMetrics() {
+		url := s.prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 		req, err := s.requestPrepare(url, http.MethodPost, buffer)
-		//TODO: добавить обработку ошибок
 		if err != nil {
 			fmt.Println(err)
+			continue
 		}
 		resp := s.sendRequest(req)
 		if resp == nil {
-			return
+			continue
 		}
 		defer resp.Body.Close()
 		err = s.responseAnalyze(resp)
 		if err != nil {
 			fmt.Println(err)
 		}
-		//sleep
-		time.Sleep(time.Second * time.Duration(reportIntervalSec))
-	}()
+	}
+	pCount++
+	c := mdata.NewSimpleCounter("PollCount", pCount)
+	url := s.prepareURLCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
+	req, err := s.requestPrepare(url, http.MethodPost, buffer)
+	//TODO: добавить обработку ошибок
+	if err != nil {
+		fmt.Println(err)
+	}
+	resp := s.sendRequest(req)
+	if resp == nil {
+		return
+	}
+	defer resp.Body.Close()
+	err = s.responseAnalyze(resp)
+	if err != nil {
+		fmt.Println(err)
+	}
+	//sleep
+	time.Sleep(time.Second * time.Duration(reportIntervalSec))
 }
 
 func (s *SimpleAgent) prepareURLCounter(base, typeName, name string, value int64) string {
