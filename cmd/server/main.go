@@ -58,7 +58,7 @@ func main() {
 		}
 	}()
 
-	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg)
+	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(sugar))
 	s.Start()
 }
