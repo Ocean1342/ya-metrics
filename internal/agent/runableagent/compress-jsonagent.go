@@ -15,42 +15,40 @@ import (
 type CompressJSONAgent struct{}
 
 func (s *CompressJSONAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
-	func() {
-		url := s.prepareURL(srvrAddr)
-		for _, m := range mgen.GenerateGaugeMetrics() {
-			req, err := s.gaugeRequestPrepare(m, url, http.MethodPost)
-			if err != nil {
-				fmt.Println(err)
-			}
-			resp := s.sendRequest(req)
-			if resp == nil {
-				continue
-			}
-			defer resp.Body.Close()
-			err = s.responseAnalyze(resp)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-		pCount++
-		req, err := s.counterRequestPrepare(mdata.NewSimpleCounter("PollCount", pCount), url, http.MethodPost)
+	url := s.prepareURL(srvrAddr)
+	for _, m := range mgen.GenerateGaugeMetrics() {
+		req, err := s.gaugeRequestPrepare(m, url, http.MethodPost)
 		if err != nil {
 			fmt.Println(err)
 		}
-		defer req.Body.Close()
 		resp := s.sendRequest(req)
 		if resp == nil {
-			return
+			continue
 		}
 		defer resp.Body.Close()
-
 		err = s.responseAnalyze(resp)
 		if err != nil {
 			fmt.Println(err)
 		}
-		//sleep
-		time.Sleep(time.Second * time.Duration(reportIntervalSec))
-	}()
+	}
+	pCount++
+	req, err := s.counterRequestPrepare(mdata.NewSimpleCounter("PollCount", pCount), url, http.MethodPost)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer req.Body.Close()
+	resp := s.sendRequest(req)
+	if resp == nil {
+		return
+	}
+	defer resp.Body.Close()
+
+	err = s.responseAnalyze(resp)
+	if err != nil {
+		fmt.Println(err)
+	}
+	//sleep
+	time.Sleep(time.Second * time.Duration(reportIntervalSec))
 }
 
 func (s *CompressJSONAgent) prepareURL(base string) string {
