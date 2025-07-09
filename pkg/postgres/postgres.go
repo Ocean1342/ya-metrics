@@ -10,8 +10,7 @@ import (
 
 var ErrConnection = errors.New("txt")
 
-// var retryTimes = []int{1, 3, 5}
-var retryTimes = []int{1, 1}
+var retryTimes = []int{1, 3, 5}
 
 func New(url string, log *zap.SugaredLogger) (*sql.DB, error) {
 	var res *sql.DB
