@@ -27,7 +27,7 @@ func (s *GaugeDBStorage) Get(n string) mdata.Gauge {
 	var name string
 	var value float64
 
-	row := s.db.QueryRow("SELECT id,value FROM metrics WHERE mtype=$1 AND id = $2", mdata.GAUGE, n)
+	row := s.db.QueryRow("SELECT id, value FROM metrics WHERE mtype=$1 AND id = $2", mdata.GAUGE, n)
 	err := row.Scan(&name, &value)
 	if err != nil {
 		return nil
@@ -36,10 +36,14 @@ func (s *GaugeDBStorage) Get(n string) mdata.Gauge {
 }
 
 func (s *GaugeDBStorage) Set(m mdata.Gauge) error {
-	s.db.Exec(
-		"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)",
+	_, err := s.db.Exec(
+		"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)"+
+			"ON CONFLICT (id) DO UPDATE SET delta=EXCLUDED.delta, value=EXCLUDED.value",
 		m.GetName(), m.GetType(), nil, m.GetValue(),
 	)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
