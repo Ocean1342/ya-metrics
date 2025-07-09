@@ -26,14 +26,13 @@ func main() {
 	var permStore *permstore.PermStore
 	var gaugeStorage server_storage.GaugeStorage
 	var countStorage server_storage.CounterStorage
-	pg, err := postgres.New(cfg.DBURL)
+	pg, err := postgres.New(cfg.DBURL, sugar)
 	if err != nil {
-		sugar.Error("could not start pg")
+		sugar.Errorf("could not start pg. err: %s", err)
 		gaugeStorage = server_storage.NewSimpleGaugeStorage()
 		countStorage = server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	} else {
-		//TODO: новая реализация
 		gaugeStorage = database.NewGauge(pg, sugar)
 		countStorage = database.NewCounter(pg, sugar, mdata.NewSimpleCounter)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)

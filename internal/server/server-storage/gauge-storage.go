@@ -59,7 +59,7 @@ func (s *SimpleGaugeStorage) SetFrom(metrics []mdata.Metrics) error {
 		}
 
 		if m.Value == nil {
-			fmt.Println(m)
+			fmt.Println("received nil gauge", m)
 			continue
 		}
 		value := *m.Value

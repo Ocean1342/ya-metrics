@@ -1,7 +1,5 @@
 package mdata
 
-import "fmt"
-
 type Gauge interface {
 	GetValue() float64
 	GetName() string
@@ -25,7 +23,6 @@ func NewSimpleGauge(name string, value float64) *GaugeMetric {
 		value:    value,
 		typeName: GAUGE,
 	}
-	fmt.Println(metric)
 	return &metric
 }
 
