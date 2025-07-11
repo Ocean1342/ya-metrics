@@ -29,7 +29,7 @@ func main() {
 	pg, err := postgres.New(cfg.DBURL, sugar)
 	if err != nil {
 		sugar.Errorf("could not start pg. err: %s", err)
-		gaugeStorage = server_storage.NewSimpleGaugeStorage()
+		gaugeStorage = server_storage.NewSimpleGaugeStorage(sugar)
 		countStorage = server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	} else {

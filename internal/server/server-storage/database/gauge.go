@@ -17,7 +17,7 @@ type GaugeDBStorage struct {
 
 func NewGauge(db *sql.DB, log *zap.SugaredLogger) *GaugeDBStorage {
 	return &GaugeDBStorage{db: db,
-		gaugeStorage: srvrstrg.NewSimpleGaugeStorage(),
+		gaugeStorage: srvrstrg.NewSimpleGaugeStorage(log),
 		gaugeFactory: mdata.NewSimpleGauge,
 		log:          log,
 	}

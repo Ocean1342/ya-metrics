@@ -45,9 +45,9 @@ func repeatableNew(url string) (*sql.DB, error) {
     delta BIGINT NULL,
     value DOUBLE PRECISION NULL)`)
 	if err != nil {
-
 		var pgErr *pgconn.ConnectError
-		//TODO:почему с As() работает, а с Is нет?
+		//TODO: вопрос - каким образом мне здесь получить pgErr *pgconn.PgError,
+		//		чтобы далее pgerrcode.IsConnectionException(pgErr)?
 		if errors.As(err, &pgErr) {
 			err = ErrConnection
 		}
