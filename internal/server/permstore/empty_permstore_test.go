@@ -34,7 +34,7 @@ func initEmptyPermStore(t *testing.T) PermanentStorable {
 		RestoreOnStart:  true,
 		StoreInterval:   60,
 	}
-	gaugeStorage := server_storage.NewSimpleGaugeStorage()
+	gaugeStorage := server_storage.NewSimpleGaugeStorage(sugar)
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	return New(sugar, &permStoreOptions, gaugeStorage, countStorage)
 }

@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"testing"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -72,9 +73,10 @@ func initUpdateHandler(fields Fields) *Handler {
 }
 
 func initHandlerFields() Fields {
+	logger, _ := zap.NewProduction()
 	f := Fields{
 		AvailableMetricsTypes: mdata.InitMetrics(),
-		gaugeStorage:          server_storage.NewSimpleGaugeStorage(),
+		gaugeStorage:          server_storage.NewSimpleGaugeStorage(logger.Sugar()),
 		countStorage:          server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter),
 	}
 	return f
