@@ -46,6 +46,7 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 				return
 			}
 			sugar.Errorf("get wrong hash")
+			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return http.HandlerFunc(fn)
