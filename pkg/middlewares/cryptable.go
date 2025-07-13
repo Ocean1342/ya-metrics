@@ -16,11 +16,11 @@ import (
 func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middleware {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
-			w.Header().Set("Content-Type", "application/json")
 			if secretKey == "" {
 				next.ServeHTTP(w, r)
 				return
 			}
+			w.Header().Set("Content-Type", "application/json")
 			hash := r.Header.Get("HashSHA256")
 			if hash == "" {
 				w.WriteHeader(http.StatusBadRequest)
