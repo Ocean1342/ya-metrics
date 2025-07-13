@@ -10,7 +10,9 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type SimpleAgent struct{}
+type SimpleAgent struct {
+	SecretKey string
+}
 
 func (s *SimpleAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	buffer := bytes.NewBuffer([]byte(""))
@@ -71,10 +73,10 @@ func (s *SimpleAgent) requestPrepare(url string, method string, reader io.Reader
 }
 
 func (s *SimpleAgent) sendRequest(req *http.Request) *http.Response {
+	secretReqPrepare(s.SecretKey, req)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		fmt.Println(err)
 		return nil
 	}
 	time.Sleep(1000 * time.Microsecond)

@@ -12,7 +12,9 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type CompressJSONAgent struct{}
+type CompressJSONAgent struct {
+	SecretKey string
+}
 
 func (s *CompressJSONAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	url := s.prepareURL(srvrAddr)
@@ -111,6 +113,7 @@ func (s *CompressJSONAgent) gaugeRequestPrepare(g mdata.Gauge, url string, metho
 }
 
 func (s *CompressJSONAgent) sendRequest(req *http.Request) *http.Response {
+	secretReqPrepare(s.SecretKey, req)
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {

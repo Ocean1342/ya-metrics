@@ -14,6 +14,7 @@ func main() {
 	host := flag.String("a", "localhost:8080", "agent host")
 	reportIntervalSec := flag.Int("r", 10, "report interval")
 	pollIntervalSec := flag.Int("p", 2, "poll interval")
+	secretKey := flag.String("k", "", "secret key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
@@ -32,12 +33,15 @@ func main() {
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
+	if os.Getenv("KEY") != "" {
+		*secretKey = os.Getenv("KEY")
+	}
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(120) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
-	jsonAgent := runableagent.CompressJSONAgent{}
-	simpleAgent := runableagent.SimpleAgent{}
+	jsonAgent := runableagent.CompressJSONAgent{SecretKey: *secretKey}
+	simpleAgent := runableagent.SimpleAgent{SecretKey: *secretKey}
 
 	//TODO: костыль, чтобы дать время серверу подняться
 	time.Sleep(5 * time.Second)
