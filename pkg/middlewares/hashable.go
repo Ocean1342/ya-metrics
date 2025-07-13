@@ -16,7 +16,6 @@ func HashableMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middl
 				next.ServeHTTP(w, r)
 				return
 			}
-			//TODO  в чем блдять проьблема
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)

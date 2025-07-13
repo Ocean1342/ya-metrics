@@ -19,19 +19,16 @@ func (h *Handler) UpdateByJSON(w http.ResponseWriter, req *http.Request) {
 	err := json.NewDecoder(req.Body).Decode(&mReq)
 	if err != nil && err != io.EOF {
 		w.WriteHeader(http.StatusBadRequest)
-		http.Error(w, fmt.Sprintf("Wrong request body: %s", err), http.StatusBadRequest)
 		return
 	}
 	mReq.MType = strings.ToLower(mReq.MType)
 	err = h.saveJSONData(&mReq)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		http.Error(w, fmt.Sprintf("Could not save data: %s", err), http.StatusBadRequest)
 		return
 	}
 	updVal, err := h.getUpdatedData(&mReq)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Could not get updated data: %s", err), http.StatusInternalServerError)
 		return
 	}
 	response, err := json.Marshal(updVal)
