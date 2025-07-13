@@ -8,11 +8,11 @@ import (
 
 func InitMiddlewares(cfg *config.Config, sugar *zap.SugaredLogger) []server.Middleware {
 	return []server.Middleware{
-		NewDecompressRequestMiddleware(sugar),
 		CryptoMiddleware(cfg.SecretKey, sugar),
 		NewLogResponseMiddleware(sugar),
 		NewCompressResponseMiddleware(),
 		NewLogRequestMiddleware(sugar),
 		HashableMiddleware(cfg.SecretKey, sugar),
+		NewDecompressRequestMiddleware(),
 	}
 }
