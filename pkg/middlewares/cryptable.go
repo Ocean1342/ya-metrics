@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strings"
 	"ya-metrics/internal/server/server"
+	"ya-metrics/internal/server/server/handlers"
 )
 
 func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middleware {
@@ -36,7 +37,12 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 			crypter.Write(body)
 			countedHash := hex.EncodeToString(crypter.Sum(nil))
 			if strings.EqualFold(countedHash, hash) {
-				next.ServeHTTP(w, r)
+				next.ServeHTTP(&handlers.CryptoResponseWriter{
+					W:         w,
+					SecretKey: secretKey,
+					Body:      body,
+				}, r)
+
 				return
 			}
 			sugar.Errorf("get wrong hash")
