@@ -43,11 +43,10 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 					SecretKey: secretKey,
 					Body:      body,
 				}, r)
-
-				return
+			} else {
+				sugar.Errorf("get wrong hash")
+				w.WriteHeader(http.StatusBadRequest)
 			}
-			sugar.Errorf("get wrong hash")
-			w.WriteHeader(http.StatusBadRequest)
 		}
 		return http.HandlerFunc(fn)
 	}
