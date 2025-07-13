@@ -16,6 +16,7 @@ import (
 func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middleware {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
+			w.Header().Set("Content-Type", "application/json")
 			if secretKey == "" {
 				next.ServeHTTP(w, r)
 				return
@@ -46,7 +47,6 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 				return
 			}
 			sugar.Errorf("get wrong hash")
-			w.Header().Set("Content-Type", "application/json")
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return http.HandlerFunc(fn)
