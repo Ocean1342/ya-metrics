@@ -22,13 +22,11 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 			hash := r.Header.Get("HashSHA256")
 			if hash == "" {
 				w.WriteHeader(http.StatusBadRequest)
-				http.Error(w, "empty hash header", http.StatusBadRequest)
 				return
 			}
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
-				http.Error(w, "could not read body", http.StatusBadRequest)
 				return
 			}
 			r.Body = io.NopCloser(bytes.NewBuffer(body))
@@ -43,7 +41,6 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 			}
 			sugar.Errorf("get wrong hash")
 			w.WriteHeader(http.StatusBadRequest)
-			http.Error(w, "not same hash", http.StatusBadRequest)
 		}
 		return http.HandlerFunc(fn)
 	}
