@@ -37,8 +37,7 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 			//закодировать
 			crypter.Write(body)
 			countedHash := hex.EncodeToString(crypter.Sum(nil))
-
-			if strings.ToLower(countedHash) == strings.ToLower(hash) {
+			if strings.EqualFold(countedHash, hash) {
 				next.ServeHTTP(w, r)
 				return
 			}
