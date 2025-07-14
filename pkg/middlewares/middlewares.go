@@ -13,7 +13,6 @@ func InitMiddlewares(cfg *config.Config, sugar *zap.SugaredLogger) []server.Midd
 		NewCompressResponseMiddleware(),
 		NewLogRequestMiddleware(sugar),
 		HashableMiddleware(cfg.SecretKey, sugar),
-		//TODO:  ошибка тут
-		NewDecompressRequestMiddleware(),
+		NewDecompressRequestMiddleware(sugar),
 	}
 }

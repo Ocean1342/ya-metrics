@@ -3,12 +3,13 @@ package middlewares
 import (
 	"bytes"
 	"compress/gzip"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"ya-metrics/internal/server/server"
 )
 
-func NewDecompressRequestMiddleware() server.Middleware {
+func NewDecompressRequestMiddleware(logger *zap.SugaredLogger) server.Middleware {
 	return func(next http.Handler) http.Handler {
 		fn := func(w http.ResponseWriter, r *http.Request) {
 			h := r.Header.Get("Content-Encoding")
