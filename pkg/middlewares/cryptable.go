@@ -27,10 +27,6 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 				return
 			}
 
-			if hash == "" {
-				w.WriteHeader(http.StatusBadRequest)
-				return
-			}
 			body, err := io.ReadAll(r.Body)
 			if err != nil {
 				w.WriteHeader(http.StatusBadRequest)
