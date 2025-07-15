@@ -22,7 +22,7 @@ func CryptoMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middlew
 			w.Header().Set("Content-Type", "application/json")
 			hash := r.Header.Get("HashSHA256")
 			sugar.Infof("url:`%s`, secret-key:`%s`, hash:`%s`", r.URL, secretKey, hash)
-			if hash == "none" {
+			if hash == "none" || hash == "" {
 				next.ServeHTTP(w, r)
 				return
 			}

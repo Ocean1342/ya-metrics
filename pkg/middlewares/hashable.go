@@ -18,7 +18,7 @@ func HashableMiddleware(secretKey string, sugar *zap.SugaredLogger) server.Middl
 			}
 			w.Header().Set("Content-Type", "application/json")
 			hash := r.Header.Get("HashSHA256")
-			if hash == "none" {
+			if hash == "none" || hash == "" {
 				next.ServeHTTP(w, r)
 				return
 			}
