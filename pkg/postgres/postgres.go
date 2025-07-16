@@ -12,12 +12,13 @@ import (
 
 var ErrRetrybleConnection = errors.New("error retryable")
 
-var retryTimes = []int{1, 3, 5}
+var retries = 3
 
 func New(url string, log *zap.SugaredLogger) (*sql.DB, error) {
 	var res *sql.DB
 	var err error
-	for _, sleep := range retryTimes {
+	for i := 1; i <= retries; i++ {
+		sleep := 2*i - 1
 		res, err = repeatableNew(url)
 		if err != nil {
 			if errors.Is(err, ErrRetrybleConnection) {
