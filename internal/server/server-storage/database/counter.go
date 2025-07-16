@@ -23,9 +23,10 @@ func (s *CounterDBStorage) Set(m mdata.Counter) error {
 	var newVal int64
 	oldVal, err := s.Get(m.GetName())
 	if err != nil {
-		_, err := s.db.Exec(
-			"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)",
-			m.GetName(), m.GetType(), m.GetValue(), nil,
+		_, err = s.db.Exec(
+			"INSERT INTO metrics (id, mtype, delta, value) VALUES ($1,$2,$3,$4)"+
+				"ON CONFLICT (id) DO UPDATE SET delta=EXCLUDED.delta, value=EXCLUDED.value",
+			m.GetName(), m.GetType(), nil, m.GetValue(),
 		)
 		if err != nil {
 			return err

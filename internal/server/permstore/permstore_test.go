@@ -24,7 +24,7 @@ func NewFullFilledPermStore() *PermStore {
 		RestoreOnStart:  true,
 		StoreInterval:   60,
 	}
-	gaugeStorage := server_storage.NewSimpleGaugeStorage()
+	gaugeStorage := server_storage.NewSimpleGaugeStorage(sugar)
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
 	//todo: seed storages
 	for _, m := range mgen.GenerateGaugeMetrics() {

@@ -1,19 +1,21 @@
 package srvrstrg
 
 import (
-	"fmt"
+	"go.uber.org/zap"
 	"strconv"
 	"ya-metrics/pkg/mdata"
 )
 
-func NewSimpleGaugeStorage() GaugeStorage {
+func NewSimpleGaugeStorage(log *zap.SugaredLogger) GaugeStorage {
 	return &SimpleGaugeStorage{
 		storage: make(map[string]mdata.Gauge, 1_000_000),
+		log:     log,
 	}
 }
 
 type SimpleGaugeStorage struct {
 	storage map[string]mdata.Gauge
+	log     *zap.SugaredLogger
 }
 
 func (s *SimpleGaugeStorage) Get(n string) mdata.Gauge {
@@ -59,7 +61,7 @@ func (s *SimpleGaugeStorage) SetFrom(metrics []mdata.Metrics) error {
 		}
 
 		if m.Value == nil {
-			fmt.Println(m)
+			s.log.Errorf("received nil gauge:%s", m.ID)
 			continue
 		}
 		value := *m.Value
