@@ -5,7 +5,7 @@ import (
 	"compress/gzip"
 	"encoding/json"
 	"fmt"
-	"io"
+	"go.uber.org/zap"
 	"net/http"
 	"time"
 	"ya-metrics/internal/agent/mgen"
@@ -14,6 +14,8 @@ import (
 
 type CompressJSONAgent struct {
 	SecretKey string
+	SendCh    chan *http.Request
+	Logger    *zap.SugaredLogger
 }
 
 func (s *CompressJSONAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
@@ -21,34 +23,17 @@ func (s *CompressJSONAgent) SendMetrics(srvrAddr string, pCount int64, reportInt
 	for _, m := range mgen.GenerateGaugeMetrics() {
 		req, err := s.gaugeRequestPrepare(m, url, http.MethodPost)
 		if err != nil {
-			fmt.Println(err)
+			s.Logger.Error(err)
 		}
-		resp := s.sendRequest(req)
-		if resp == nil {
-			continue
-		}
-		defer resp.Body.Close()
-		err = s.responseAnalyze(resp)
-		if err != nil {
-			fmt.Println(err)
-		}
+		s.sendRequest(req)
 	}
 	pCount++
 	req, err := s.counterRequestPrepare(mdata.NewSimpleCounter("PollCount", pCount), url, http.MethodPost)
 	if err != nil {
-		fmt.Println(err)
+		s.Logger.Error(err)
 	}
-	defer req.Body.Close()
-	resp := s.sendRequest(req)
-	if resp == nil {
-		return
-	}
-	defer resp.Body.Close()
+	s.sendRequest(req)
 
-	err = s.responseAnalyze(resp)
-	if err != nil {
-		fmt.Println(err)
-	}
 	//sleep
 	time.Sleep(time.Second * time.Duration(reportIntervalSec))
 }
@@ -84,7 +69,7 @@ func (s *CompressJSONAgent) counterRequestPrepare(c mdata.Counter, url string, m
 	}
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(compressed))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		s.Logger.Error("Error creating request:", err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -104,7 +89,7 @@ func (s *CompressJSONAgent) gaugeRequestPrepare(g mdata.Gauge, url string, metho
 	}
 	req, err := http.NewRequest(method, url, bytes.NewBuffer(compressed))
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		s.Logger.Error("Error creating request:", err)
 		panic(err)
 	}
 	req.Header.Add("Content-Type", "application/json")
@@ -112,29 +97,7 @@ func (s *CompressJSONAgent) gaugeRequestPrepare(g mdata.Gauge, url string, metho
 	return req, nil
 }
 
-func (s *CompressJSONAgent) sendRequest(req *http.Request) *http.Response {
+func (s *CompressJSONAgent) sendRequest(req *http.Request) {
 	secretReqPrepare(s.SecretKey, req)
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	time.Sleep(1000 * time.Microsecond)
-	return resp
-}
-
-func (s *CompressJSONAgent) responseAnalyze(resp *http.Response) error {
-	if resp == nil {
-		return fmt.Errorf("nil response")
-	}
-	// Читаем ответ
-	defer resp.Body.Close()
-	_, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return fmt.Errorf("error reading response")
-	}
-
-	return nil
+	s.SendCh <- req
 }
