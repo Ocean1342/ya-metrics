@@ -1,10 +1,13 @@
 package mgen
 
 import (
+	"github.com/shirou/gopsutil/v3/cpu"
+	"github.com/shirou/gopsutil/v4/mem"
 	"go.uber.org/zap"
 	"math/rand"
 	"runtime"
 	"sync"
+	"time"
 	"ya-metrics/pkg/mdata"
 )
 
@@ -13,19 +16,19 @@ func GenerateGaugeMetrics(logger *zap.SugaredLogger) <-chan mdata.Gauge {
 	var memStats runtime.MemStats
 	runtime.ReadMemStats(&memStats)
 	wg := sync.WaitGroup{}
-	/*	wg.Add(1)
-		go func() {
-			defer wg.Done()
-			v, _ := mem.VirtualMemory()
-			ch <- mdata.NewSimpleGauge("TotalMemory", float64(v.Total))
-			ch <- mdata.NewSimpleGauge("FreeMemory", float64(v.Free))
-			percent, err := cpu.Percent(time.Second, false)
-			if err != nil {
-				logger.Errorf("could not get CPUutilization1 err:%s", err)
-				return
-			}
-			ch <- mdata.NewSimpleGauge("CPUutilization1", float64(percent[0]))
-		}()*/
+	wg.Add(1)
+	go func() {
+		defer wg.Done()
+		v, _ := mem.VirtualMemory()
+		ch <- mdata.NewSimpleGauge("TotalMemory", float64(v.Total))
+		ch <- mdata.NewSimpleGauge("FreeMemory", float64(v.Free))
+		percent, err := cpu.Percent(time.Second, false)
+		if err != nil {
+			logger.Errorf("could not get CPUutilization1 err:%s", err)
+			return
+		}
+		ch <- mdata.NewSimpleGauge("CPUutilization1", float64(percent[0]))
+	}()
 
 	wg.Add(1)
 	go func() {
