@@ -4,8 +4,8 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/zap"
-	"net/http"
 	"os"
 	"strconv"
 	"time"
@@ -56,7 +56,11 @@ func main() {
 	defer cancel()
 	//TODO: костыль, чтобы дать время серверу подняться
 	//time.Sleep(11 * time.Second)
-	cncrncyAgent := concurrencyagent.New(sugar, &http.Client{}, uint(*rateLimit))
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3                   // Максимальное количество попыток
+	retryClient.RetryWaitMin = 1 * time.Second // Минимальное время ожидания между попытками
+	retryClient.RetryWaitMax = 5 * time.Second
+	cncrncyAgent := concurrencyagent.New(sugar, retryClient, uint(*rateLimit))
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
 	for range ctx.Done() {
 		sugar.Info("client shutting down")

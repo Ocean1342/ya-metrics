@@ -3,6 +3,7 @@ package concurrencyagent
 import (
 	"context"
 	"errors"
+	"github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -21,13 +22,15 @@ type ConcurrencyAgent struct {
 	client    *http.Client
 }
 
-func New(logger *zap.SugaredLogger, client *http.Client, rateLimit uint) *ConcurrencyAgent {
+func New(logger *zap.SugaredLogger, client *retryablehttp.Client, rateLimit uint) *ConcurrencyAgent {
+
+	c := client.StandardClient()
 	return &ConcurrencyAgent{
 		RateLimit: rateLimit,
 		counter:   rateLimit,
 		reqCh:     make(chan *http.Request, rateLimit),
 		logger:    logger,
-		client:    client,
+		client:    c,
 	}
 }
 
@@ -65,8 +68,8 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 		c.logger.Errorf("err on send request:%s", err)
 		return
 	}
-	resp.Body.Close()
 	//TODO: ВОПРОС : тут падает vet test, но действительно ли нужно закрывать тело ответа, если оно не используется?
+	defer resp.Body.Close()
 	c.mu.Lock()
 	if c.counter < c.RateLimit {
 		c.counter++
