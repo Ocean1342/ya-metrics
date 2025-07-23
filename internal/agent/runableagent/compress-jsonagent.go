@@ -20,7 +20,7 @@ type CompressJSONAgent struct {
 
 func (s *CompressJSONAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	url := s.prepareURL(srvrAddr)
-	for _, m := range mgen.GenerateGaugeMetrics() {
+	for m := range mgen.GenerateGaugeMetrics(s.Logger) {
 		req, err := s.gaugeRequestPrepare(m, url, http.MethodPost)
 		if err != nil {
 			s.Logger.Error(err)

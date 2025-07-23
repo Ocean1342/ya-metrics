@@ -62,7 +62,6 @@ func main() {
 		case <-ctx.Done():
 			sugar.Info("client shutting down")
 			return
-		default:
 		}
 	}
 }

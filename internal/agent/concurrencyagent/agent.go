@@ -9,9 +9,6 @@ import (
 	"ya-metrics/internal/agent/runableagent"
 )
 
-//TODO: 1 реквест фактори (все типы!)
-//		2 прокинуть логирование
-
 type ConcurrencyAgent struct {
 	RateLimit uint
 	mu        sync.Mutex
@@ -83,7 +80,25 @@ func (c *ConcurrencyAgent) requestFactory(ctx context.Context, srvrAddr string, 
 		SendCh:    c.reqCh,
 		Logger:    c.logger,
 	}
-	compressJSONAgent.SendMetrics(srvrAddr, pCount, reportIntervalSec)
-	SimpleAgent.SendMetrics(srvrAddr, pCount, reportIntervalSec)
-	//c.reqCh
+
+	for {
+		select {
+		default:
+			wg := sync.WaitGroup{}
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				compressJSONAgent.SendMetrics(srvrAddr, pCount, reportIntervalSec)
+			}()
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+				SimpleAgent.SendMetrics(srvrAddr, pCount, reportIntervalSec)
+			}()
+			wg.Wait()
+		case <-ctx.Done():
+			c.logger.Info("requestFactory stopped by context")
+			return
+		}
+	}
 }

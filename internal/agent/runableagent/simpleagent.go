@@ -19,7 +19,7 @@ type SimpleAgent struct {
 
 func (s *SimpleAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	buffer := bytes.NewBuffer([]byte(""))
-	for _, m := range mgen.GenerateGaugeMetrics() {
+	for m := range mgen.GenerateGaugeMetrics(s.Logger) {
 		url := s.prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 		req, err := s.requestPrepare(url, http.MethodPost, buffer)
 		if err != nil {
