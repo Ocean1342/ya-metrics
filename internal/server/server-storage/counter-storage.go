@@ -65,8 +65,6 @@ func (s *SimpleCountStorage) GetMetrics() []mdata.Metrics {
 
 func (s *SimpleCountStorage) SetFrom(metrics []mdata.Metrics) error {
 	factory := mdata.NewSimpleCounter
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	for _, m := range metrics {
 		if m.MType != mdata.COUNTER {
 			continue

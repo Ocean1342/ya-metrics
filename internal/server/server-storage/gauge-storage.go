@@ -65,8 +65,6 @@ func (s *SimpleGaugeStorage) GetMetrics() []mdata.Metrics {
 }
 
 func (s *SimpleGaugeStorage) SetFrom(metrics []mdata.Metrics) error {
-	s.mu.Lock()
-	defer s.mu.Unlock()
 	factory := mdata.NewSimpleGauge
 	for _, m := range metrics {
 		if m.MType != mdata.GAUGE {
