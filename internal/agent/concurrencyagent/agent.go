@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"runtime"
 	"sync"
+	"time"
 	"ya-metrics/internal/agent/runableagent"
 )
 
@@ -58,8 +59,8 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 		return
 	}
 	c.logger.Infof("worker № %d starting", order)
+	time.Sleep(100 * time.Millisecond)
 	resp, err := c.client.Do(req)
-
 	if err != nil && !errors.Is(err, io.EOF) {
 		c.logger.Errorf("err on send request:%s", err)
 		return
