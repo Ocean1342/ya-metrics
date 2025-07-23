@@ -17,7 +17,7 @@ var sugar *zap.SugaredLogger
 func main() {
 	initLogger()
 	host := flag.String("a", "localhost:8080", "agent host")
-	reportIntervalSec := flag.Int("r", 1, "report interval")
+	reportIntervalSec := flag.Int("r", 5, "report interval")
 	pollIntervalSec := flag.Int("p", 5, "poll interval")
 	secretKey := flag.String("k", "", "secret key")
 	rateLimit := flag.Int("l", 1, "secret key")
@@ -55,7 +55,7 @@ func main() {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 	//TODO: костыль, чтобы дать время серверу подняться
-	time.Sleep(11 * time.Second)
+	//time.Sleep(11 * time.Second)
 	cncrncyAgent := concurrencyagent.New(sugar, &http.Client{}, uint(*rateLimit))
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
 	for range ctx.Done() {
