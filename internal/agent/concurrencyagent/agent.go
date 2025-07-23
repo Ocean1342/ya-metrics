@@ -2,7 +2,9 @@ package concurrencyagent
 
 import (
 	"context"
+	"errors"
 	"go.uber.org/zap"
+	"io"
 	"net/http"
 	"runtime"
 	"sync"
@@ -58,7 +60,7 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 	c.logger.Infof("worker № %d starting", order)
 	resp, err := c.client.Do(req)
 
-	if err != nil {
+	if err != nil && !errors.Is(err, io.EOF) {
 		c.logger.Errorf("err on send request:%s", err)
 		return
 	}
