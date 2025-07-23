@@ -18,6 +18,7 @@ func (h *Handler) UpdateByJSON(w http.ResponseWriter, req *http.Request) {
 	var mReq mdata.Metrics
 	err := json.NewDecoder(req.Body).Decode(&mReq)
 	if err != nil && err != io.EOF {
+		h.log.Errorf("UpdateByJSON decode error: %s", err.Error())
 		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
