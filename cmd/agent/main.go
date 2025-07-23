@@ -17,10 +17,10 @@ var sugar *zap.SugaredLogger
 func main() {
 	initLogger()
 	host := flag.String("a", "localhost:8080", "agent host")
-	reportIntervalSec := flag.Int("r", 10, "report interval")
-	pollIntervalSec := flag.Int("p", 2, "poll interval")
+	reportIntervalSec := flag.Int("r", 1, "report interval")
+	pollIntervalSec := flag.Int("p", 5, "poll interval")
 	secretKey := flag.String("k", "", "secret key")
-	rateLimit := flag.Int("l", 5, "secret key")
+	rateLimit := flag.Int("l", 1, "secret key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
