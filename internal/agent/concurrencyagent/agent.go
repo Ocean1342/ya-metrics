@@ -3,7 +3,6 @@ package concurrencyagent
 import (
 	"context"
 	"errors"
-	"github.com/hashicorp/go-retryablehttp"
 	"go.uber.org/zap"
 	"io"
 	"net/http"
@@ -21,15 +20,13 @@ type ConcurrencyAgent struct {
 	client    *http.Client
 }
 
-func New(logger *zap.SugaredLogger, client *retryablehttp.Client, rateLimit uint) *ConcurrencyAgent {
-
-	c := client.StandardClient()
+func New(logger *zap.SugaredLogger, client *http.Client, rateLimit uint) *ConcurrencyAgent {
 	return &ConcurrencyAgent{
 		RateLimit: rateLimit,
 		counter:   rateLimit,
 		reqCh:     make(chan *http.Request, rateLimit),
 		logger:    logger,
-		client:    c,
+		client:    client,
 	}
 }
 
