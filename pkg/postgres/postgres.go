@@ -23,13 +23,13 @@ func New(url string, log *zap.SugaredLogger) (*sql.DB, error) {
 		if err != nil {
 			if errors.Is(err, ErrRetrybleConnection) {
 				log.Infof("detected retryble error:`%s`. sleep for:%d", err, sleep)
-				time.Sleep(time.Duration(sleep) * time.Second)
+				time.Sleep(time.Duration(sleep) * time.Millisecond)
 				continue
 			}
 		}
 		if res == nil {
 			log.Infof("could not start db. sleep for:%d", sleep)
-			time.Sleep(time.Duration(sleep) * time.Second)
+			time.Sleep(time.Duration(sleep) * time.Millisecond)
 			continue
 		}
 		return res, nil

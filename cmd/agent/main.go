@@ -4,16 +4,24 @@ import (
 	"context"
 	"flag"
 	"fmt"
+	"github.com/hashicorp/go-retryablehttp"
+	"go.uber.org/zap"
+	"net/http"
 	"os"
 	"strconv"
 	"time"
-	"ya-metrics/internal/agent/runableagent"
+	"ya-metrics/internal/agent/concurrencyagent"
 )
 
+var sugar *zap.SugaredLogger
+
 func main() {
+	initLogger()
 	host := flag.String("a", "localhost:8080", "agent host")
-	reportIntervalSec := flag.Int("r", 10, "report interval")
-	pollIntervalSec := flag.Int("p", 2, "poll interval")
+	reportIntervalSec := flag.Int("r", 5, "report interval")
+	pollIntervalSec := flag.Int("p", 5, "poll interval")
+	secretKey := flag.String("k", "", "secret key")
+	rateLimit := flag.Int("l", 1, "secret key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
@@ -32,23 +40,43 @@ func main() {
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
+	if os.Getenv("KEY") != "" {
+		*secretKey = os.Getenv("KEY")
+	}
+	if os.Getenv("RATE_LIMIT") != "" {
+		valRateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+		if err != nil {
+			panic(err)
+		}
+		*rateLimit = valRateLimit
+	}
+
 	srvrAddr := fmt.Sprintf("http://%s", *host)
-	timeToWork := time.Duration(120) * time.Second
+	timeToWork := time.Duration(180) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
-	jsonAgent := runableagent.CompressJSONAgent{}
-	simpleAgent := runableagent.SimpleAgent{}
 
-	//TODO: костыль, чтобы дать время серверу подняться
-	time.Sleep(5 * time.Second)
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("shutting down")
-			return
-		default:
-			jsonAgent.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-			simpleAgent.SendMetrics(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-		}
+	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit))
+	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	for range ctx.Done() {
+		sugar.Info("client shutting down")
+		return
 	}
+}
+
+func initLogger() {
+	logger, err := zap.NewProduction()
+	if err != nil {
+		panic("could not start logger")
+	}
+	defer logger.Sync()
+	sugar = logger.Sugar()
+}
+
+func initClient() *http.Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	retryClient.RetryWaitMin = 1 * time.Second
+	retryClient.RetryWaitMax = 5 * time.Second
+	return retryClient.StandardClient()
 }

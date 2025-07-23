@@ -3,6 +3,7 @@ package runableagent
 import (
 	"bytes"
 	"fmt"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"time"
@@ -10,45 +11,32 @@ import (
 	"ya-metrics/pkg/mdata"
 )
 
-type SimpleAgent struct{}
+type SimpleAgent struct {
+	SecretKey string
+	SendCh    chan *http.Request
+	Logger    *zap.SugaredLogger
+}
 
 func (s *SimpleAgent) SendMetrics(srvrAddr string, pCount int64, reportIntervalSec int) {
 	buffer := bytes.NewBuffer([]byte(""))
-	for _, m := range mgen.GenerateGaugeMetrics() {
+	for m := range mgen.GenerateGaugeMetrics(s.Logger) {
 		url := s.prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
 		req, err := s.requestPrepare(url, http.MethodPost, buffer)
 		if err != nil {
-			fmt.Println(err)
+			s.Logger.Error(err)
 			continue
 		}
-		resp := s.sendRequest(req)
-		if resp == nil {
-			continue
-		}
-		defer resp.Body.Close()
-		err = s.responseAnalyze(resp)
-		if err != nil {
-			fmt.Println(err)
-		}
+		s.sendRequest(req)
 	}
 	pCount++
 	c := mdata.NewSimpleCounter("PollCount", pCount)
 	url := s.prepareURLCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
 	req, err := s.requestPrepare(url, http.MethodPost, buffer)
-	//TODO: добавить обработку ошибок
+
 	if err != nil {
-		fmt.Println(err)
+		s.Logger.Error(err)
 	}
-	resp := s.sendRequest(req)
-	if resp == nil {
-		return
-	}
-	defer resp.Body.Close()
-	err = s.responseAnalyze(resp)
-	if err != nil {
-		fmt.Println(err)
-	}
-	//sleep
+	s.sendRequest(req)
 	time.Sleep(time.Second * time.Duration(reportIntervalSec))
 }
 
@@ -63,36 +51,14 @@ func (s *SimpleAgent) prepareURLGauge(base, typeName, name string, value float64
 func (s *SimpleAgent) requestPrepare(url string, method string, reader io.Reader) (*http.Request, error) {
 	req, err := http.NewRequest(method, url, reader)
 	if err != nil {
-		fmt.Println("Error creating request:", err)
+		s.Logger.Error(err)
 		panic(err)
 	}
 	req.Header.Set("Content-Type", "text/plain")
 	return req, nil
 }
 
-func (s *SimpleAgent) sendRequest(req *http.Request) *http.Response {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	time.Sleep(1000 * time.Microsecond)
-	return resp
-}
-
-// TODO: доделать анализ ответа
-func (s *SimpleAgent) responseAnalyze(resp *http.Response) error {
-	if resp == nil {
-		return fmt.Errorf("nil response")
-	}
-	// Читаем ответ
-	defer resp.Body.Close()
-	_, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return fmt.Errorf("error reading response")
-	}
-
-	return nil
+func (s *SimpleAgent) sendRequest(req *http.Request) {
+	secretReqPrepare(s.SecretKey, req)
+	s.SendCh <- req
 }

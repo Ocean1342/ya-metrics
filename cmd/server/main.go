@@ -18,6 +18,12 @@ import (
 	"ya-metrics/pkg/postgres"
 )
 
+/*
+конфиги
+криптер-пакет
+криптер мидл вар
+криптер декоратор
+*/
 var sugar *zap.SugaredLogger
 
 func main() {
@@ -58,7 +64,7 @@ func main() {
 	}()
 
 	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg, sugar)
-	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(sugar))
+	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar))
 	s.Start()
 }
 

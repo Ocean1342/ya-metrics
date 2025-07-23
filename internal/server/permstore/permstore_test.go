@@ -26,8 +26,7 @@ func NewFullFilledPermStore() *PermStore {
 	}
 	gaugeStorage := server_storage.NewSimpleGaugeStorage(sugar)
 	countStorage := server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter)
-	//todo: seed storages
-	for _, m := range mgen.GenerateGaugeMetrics() {
+	for m := range mgen.GenerateGaugeMetrics(sugar) {
 		err = gaugeStorage.Set(m)
 		if err != nil {
 			errStr := fmt.Sprintf("could not put data to storage. Name: %s, type: %s, values:%f", m.GetName(), m.GetType(), m.GetValue())

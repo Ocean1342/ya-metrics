@@ -2,7 +2,6 @@ package server
 
 import (
 	"github.com/go-chi/chi/v5"
-	"github.com/go-chi/chi/v5/middleware"
 	"net/http"
 	"ya-metrics/config"
 	"ya-metrics/internal/server/server/handlers"
@@ -34,7 +33,6 @@ type ChiServer struct {
 
 func (s *ChiServer) Start() {
 	router := chi.NewRouter()
-	router.Use(middleware.RequestID)
 	for _, m := range s.middlewares {
 		router.Use(m)
 	}

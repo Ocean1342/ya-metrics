@@ -3,22 +3,27 @@ package srvrstrg
 import (
 	"go.uber.org/zap"
 	"strconv"
+	"sync"
 	"ya-metrics/pkg/mdata"
 )
 
 func NewSimpleGaugeStorage(log *zap.SugaredLogger) GaugeStorage {
 	return &SimpleGaugeStorage{
+		mu:      sync.RWMutex{},
 		storage: make(map[string]mdata.Gauge, 1_000_000),
 		log:     log,
 	}
 }
 
 type SimpleGaugeStorage struct {
+	mu      sync.RWMutex
 	storage map[string]mdata.Gauge
 	log     *zap.SugaredLogger
 }
 
 func (s *SimpleGaugeStorage) Get(n string) mdata.Gauge {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	elem, ok := s.storage[n]
 	if !ok {
 		return nil
@@ -27,11 +32,15 @@ func (s *SimpleGaugeStorage) Get(n string) mdata.Gauge {
 }
 
 func (s *SimpleGaugeStorage) Set(m mdata.Gauge) error {
+	s.mu.Lock()
+	defer s.mu.Unlock()
 	s.storage[m.GetName()] = m
 	return nil
 }
 
 func (s *SimpleGaugeStorage) GetList() map[string]string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	res := make(map[string]string, len(s.storage))
 	for k, v := range s.storage {
 		res[k] = strconv.Itoa(int(v.GetValue()))
@@ -41,6 +50,8 @@ func (s *SimpleGaugeStorage) GetList() map[string]string {
 func (s *SimpleGaugeStorage) GetMetrics() []mdata.Metrics {
 	md := make([]mdata.Metrics, len(s.storage))
 	i := 0
+	s.mu.RLock()
+	defer s.mu.RUnlock()
 	for _, gauge := range s.storage {
 		value := gauge.GetValue()
 		md[i] = mdata.Metrics{
