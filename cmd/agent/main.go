@@ -55,7 +55,7 @@ func main() {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 	//TODO: костыль, чтобы дать время серверу подняться
-	time.Sleep(5 * time.Second)
+	time.Sleep(11 * time.Second)
 	cncrncyAgent := concurrencyagent.New(sugar, &http.Client{}, uint(*rateLimit))
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
 	for range ctx.Done() {
