@@ -54,15 +54,13 @@ func main() {
 	timeToWork := time.Duration(180) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
+	//TODO: костыль, чтобы дать время серверу подняться
+	time.Sleep(5 * time.Second)
 	cncrncyAgent := concurrencyagent.New(sugar, &http.Client{}, uint(*rateLimit))
-
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
-	for {
-		select {
-		case <-ctx.Done():
-			sugar.Info("client shutting down")
-			return
-		}
+	for range ctx.Done() {
+		sugar.Info("client shutting down")
+		return
 	}
 }
 

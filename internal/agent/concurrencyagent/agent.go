@@ -56,7 +56,12 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 		return
 	}
 	c.logger.Infof("worker № %d starting", order)
-
+	defer func() {
+		err := req.Body.Close()
+		if err != nil {
+			c.logger.Error("could not close response body on send")
+		}
+	}()
 	_, err := c.client.Do(req)
 	if err != nil {
 		c.logger.Errorf("err on send request:%s", err)
