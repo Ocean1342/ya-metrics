@@ -75,7 +75,7 @@ func New() *Config {
 		case "false":
 			*profileEnabled = false
 		default:
-			panic(fmt.Sprintf("invalid profileEnabled env value: %s", profileEnabled))
+			panic(fmt.Sprintf("invalid profileEnabled env value: %s", profileEnabledEnv))
 		}
 		*profileEnabled = true
 	}
