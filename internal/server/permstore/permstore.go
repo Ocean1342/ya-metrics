@@ -92,12 +92,16 @@ func (ps *PermStore) Extract() error {
 
 func (ps *PermStore) Dump() error {
 	ps.logger.Info("Dump")
-	var metrics []mdata.Metrics
 	err := ps.file.Truncate(0)
 	if err != nil {
 		return err
 	}
 	ps.file.Seek(0, io.SeekStart)
+	lenOfMetrics := 0
+	for _, s := range ps.storages {
+		lenOfMetrics += len(s.GetMetrics())
+	}
+	metrics := make([]mdata.Metrics, lenOfMetrics)
 	for _, s := range ps.storages {
 		metrics = append(metrics, s.GetMetrics()...)
 	}

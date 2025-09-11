@@ -4,6 +4,7 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
+	_ "net/http/pprof"
 	"os"
 	"os/signal"
 	"syscall"
@@ -18,12 +19,6 @@ import (
 	"ya-metrics/pkg/postgres"
 )
 
-/*
-конфиги
-криптер-пакет
-криптер мидл вар
-криптер декоратор
-*/
 var sugar *zap.SugaredLogger
 
 func main() {

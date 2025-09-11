@@ -15,6 +15,7 @@ type Config struct {
 	PermStoreOptions *PermStoreOptions `json:"perm_store_options"`
 	DBURL            string            `json:"db_url"`
 	SecretKey        string            `json:"secret_key"`
+	ProfilingEnabled bool              `json:"profiling_enabled"`
 }
 
 type PermStoreOptions struct {
@@ -28,6 +29,7 @@ func New() *Config {
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
 	restoreOnStart := flag.Bool("r", false, "restore storage from file")
+	profileEnabled := flag.Bool("pprof", true, "enable profiling")
 	secretKey := flag.String("k", "", "secret key")
 	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
 	dbURL := flag.String("d", "", "server address")
@@ -65,6 +67,19 @@ func New() *Config {
 		*restoreOnStart = true
 	}
 
+	profileEnabledEnv := os.Getenv("PROFILING_ENABLED")
+	if profileEnabledEnv != "" {
+		switch strings.ToLower(profileEnabledEnv) {
+		case "true":
+			*profileEnabled = true
+		case "false":
+			*profileEnabled = false
+		default:
+			panic(fmt.Sprintf("invalid profileEnabled env value: %s", profileEnabled))
+		}
+		*profileEnabled = true
+	}
+
 	return &Config{
 		Port:       8080,
 		Host:       "localhost",
@@ -74,7 +89,8 @@ func New() *Config {
 			FileStoragePath: *fileStoragePath,
 			RestoreOnStart:  *restoreOnStart,
 		},
-		DBURL:     *dbURL,
-		SecretKey: *secretKey,
+		DBURL:            *dbURL,
+		SecretKey:        *secretKey,
+		ProfilingEnabled: *profileEnabled,
 	}
 }
