@@ -49,7 +49,7 @@ func (s *GaugeDBStorage) Set(m mdata.Gauge) error {
 
 func (s *GaugeDBStorage) GetList() map[string]string {
 	g := make(map[string]string)
-	rows, err := s.db.Query("SELECT name,value FROM metrics WHERE mtype=$1", mdata.GAUGE)
+	rows, err := s.db.Query("SELECT id,value FROM metrics WHERE mtype=$1", mdata.GAUGE)
 	if err != nil {
 		return nil
 	}
@@ -69,8 +69,15 @@ func (s *GaugeDBStorage) GetList() map[string]string {
 	return g
 }
 func (s *GaugeDBStorage) GetMetrics() []mdata.Metrics {
-	md := make([]mdata.Metrics, 1_000_000)
-	rows, err := s.db.Query("SELECT name,value FROM metrics WHERE mtype=$1", mdata.GAUGE)
+	var countRows int
+	row := s.db.QueryRow("SELECT count(*) FROM metrics WHERE mtype=$1", mdata.GAUGE)
+	err := row.Scan(&countRows)
+	if err != nil {
+		s.log.Errorf("could not get count rows for counter data")
+		return nil
+	}
+	md := make([]mdata.Metrics, countRows)
+	rows, err := s.db.Query("SELECT id,value FROM metrics WHERE mtype=$1", mdata.GAUGE)
 	if err != nil {
 		return nil
 	}

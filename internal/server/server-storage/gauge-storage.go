@@ -10,7 +10,7 @@ import (
 func NewSimpleGaugeStorage(log *zap.SugaredLogger) GaugeStorage {
 	return &SimpleGaugeStorage{
 		mu:      sync.RWMutex{},
-		storage: make(map[string]mdata.Gauge, 1_000_000),
+		storage: make(map[string]mdata.Gauge, 100),
 		log:     log,
 	}
 }

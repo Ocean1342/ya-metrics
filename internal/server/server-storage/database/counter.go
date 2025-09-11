@@ -66,7 +66,7 @@ func (s *CounterDBStorage) Get(n string) (mdata.Counter, error) {
 
 func (s *CounterDBStorage) GetList() map[string]string {
 	g := make(map[string]string)
-	rows, err := s.db.Query("SELECT name,value FROM metrics WHERE mtype=$1", mdata.COUNTER)
+	rows, err := s.db.Query("SELECT id,value FROM metrics WHERE mtype=$1", mdata.COUNTER)
 	if err != nil {
 		return nil
 	}
@@ -86,8 +86,15 @@ func (s *CounterDBStorage) GetList() map[string]string {
 	return g
 }
 func (s *CounterDBStorage) GetMetrics() []mdata.Metrics {
-	md := make([]mdata.Metrics, 1_000_000)
-	rows, err := s.db.Query("SELECT name,value FROM metrics WHERE mtype=$1", mdata.COUNTER)
+	var countRows int
+	row := s.db.QueryRow("SELECT count(*) FROM metrics WHERE mtype=$1", mdata.COUNTER)
+	err := row.Scan(&countRows)
+	if err != nil {
+		s.log.Errorf("could not get count rows for counter data")
+		return nil
+	}
+	md := make([]mdata.Metrics, countRows)
+	rows, err := s.db.Query("SELECT id,value FROM metrics WHERE mtype=$1", mdata.COUNTER)
 	if err != nil {
 		return nil
 	}
