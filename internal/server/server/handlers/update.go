@@ -14,7 +14,10 @@ type UpdateRequest struct {
 	Value string
 }
 
-// TODO: как убрать дублирование writer.WriteHeader(http.StatusBadRequest)
+/*func (u *UpdateRequest) String() string {
+	return fmt.Sprintf("Type: %s, Name: %s, Value: %s", u.Type, u.Name, u.Value)
+}*/
+
 func (h *Handler) Update(writer http.ResponseWriter, req *http.Request) {
 	writer.Header().Set("Content-Type", "text/plain")
 	if req.Method != http.MethodPost {
@@ -28,7 +31,7 @@ func (h *Handler) Update(writer http.ResponseWriter, req *http.Request) {
 		http.Error(writer, err.Error(), http.StatusBadRequest)
 		return
 	}
-	ur, err := h.updateRequestPrepare(req.URL.Path)
+	ur, err := UpdateRequestPrepare(req.URL.Path)
 	if err != nil {
 		writer.WriteHeader(http.StatusBadRequest)
 		http.Error(writer, err.Error(), http.StatusBadRequest)
@@ -80,7 +83,8 @@ func (h *Handler) saveData(ur *UpdateRequest) error {
 	return nil
 }
 
-func (h *Handler) updateRequestPrepare(path string) (*UpdateRequest, error) {
+// UpdateRequestPrepare - prepare request from url path
+func UpdateRequestPrepare(path string) (*UpdateRequest, error) {
 	parts := strings.Split(path, "/")
 	if len(parts) != 5 {
 		return nil, fmt.Errorf("invalid path: %s", path)
