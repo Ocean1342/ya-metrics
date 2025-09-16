@@ -14,6 +14,7 @@ type GetHandler struct {
 	countStorage          server_storage.CounterStorage
 }
 
+// Get metric value
 func (h *Handler) Get(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
