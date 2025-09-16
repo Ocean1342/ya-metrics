@@ -14,10 +14,6 @@ type UpdateRequest struct {
 	Value string
 }
 
-/*func (u *UpdateRequest) String() string {
-	return fmt.Sprintf("Type: %s, Name: %s, Value: %s", u.Type, u.Name, u.Value)
-}*/
-
 func (h *Handler) Update(writer http.ResponseWriter, req *http.Request) {
 	writer.Header().Set("Content-Type", "text/plain")
 	if req.Method != http.MethodPost {
