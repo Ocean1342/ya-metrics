@@ -5,6 +5,7 @@ import (
 	"net/http"
 )
 
+// GetList getting list of metrics
 func (h *Handler) GetList(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		w.WriteHeader(http.StatusMethodNotAllowed)
