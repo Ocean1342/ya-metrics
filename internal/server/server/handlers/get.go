@@ -4,14 +4,11 @@ import (
 	"fmt"
 	"github.com/go-chi/chi/v5"
 	"net/http"
-	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
 )
 
 type GetHandler struct {
 	AvailableMetricsTypes mdata.AvailableMetricsTypes
-	gaugeStorage          server_storage.GaugeStorage
-	countStorage          server_storage.CounterStorage
 }
 
 // Get metric value
