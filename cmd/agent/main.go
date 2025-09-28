@@ -13,9 +13,15 @@ import (
 	"ya-metrics/internal/agent/concurrencyagent"
 )
 
-var sugar *zap.SugaredLogger
+var (
+	sugar        *zap.SugaredLogger
+	buildVersion string = "N\\A"
+	buildDate    string = "N\\A"
+	buildCommit  string = "N\\A"
+)
 
 func main() {
+	fmt.Printf("Build version:=%s, Build date=%s Build commit=%s\n", buildVersion, buildDate, buildCommit)
 	initLogger()
 	host := flag.String("a", "localhost:8080", "agent host")
 	reportIntervalSec := flag.Int("r", 5, "report interval")
