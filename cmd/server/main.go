@@ -38,26 +38,7 @@ func main() {
 		countStorage = database.NewCounter(pg, sugar, mdata.NewSimpleCounter)
 		permStore = permstore.New(sugar, cfg.PermStoreOptions, gaugeStorage, countStorage)
 	}
-
-	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
-	//принудительная выгрузка при завершении работы
-	go func() {
-		v, ok := <-sigCh
-		err := permStore.Dump()
-		if err != nil {
-			panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
-		}
-		if ok {
-			switch v {
-			case syscall.SIGINT:
-				os.Exit(int(syscall.SIGINT))
-			case syscall.SIGTERM:
-				os.Exit(int(syscall.SIGTERM))
-			}
-		}
-	}()
-
+	go shutDown(permStore)
 	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar))
 	s.Start()
@@ -70,4 +51,23 @@ func initLogger() {
 	}
 	defer logger.Sync()
 	sugar = logger.Sugar()
+}
+
+func shutDown(permStore *permstore.PermStore) {
+	sigCh := make(chan os.Signal, 1)
+	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
+	//принудительная выгрузка при завершении работы
+	v, ok := <-sigCh
+	err := permStore.Dump()
+	if err != nil {
+		panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
+	}
+	if ok {
+		switch v {
+		case syscall.SIGINT:
+			os.Exit(int(syscall.SIGINT))
+		case syscall.SIGTERM:
+			os.Exit(int(syscall.SIGTERM))
+		}
+	}
 }
