@@ -19,9 +19,15 @@ import (
 	"ya-metrics/pkg/postgres"
 )
 
-var sugar *zap.SugaredLogger
+var (
+	sugar        *zap.SugaredLogger
+	buildVersion string = "N\\A"
+	buildDate    string = "N\\A"
+	buildCommit  string = "N\\A"
+)
 
 func main() {
+	fmt.Printf("Build version:=%s, Build date=%s Build commit=%s\n", buildVersion, buildDate, buildCommit)
 	initLogger()
 	cfg := config.New()
 	var permStore *permstore.PermStore
