@@ -11,6 +11,7 @@ import (
 	"strconv"
 	"time"
 	"ya-metrics/internal/agent/concurrencyagent"
+	"ya-metrics/pkg/crypto"
 )
 
 var (
@@ -27,7 +28,8 @@ func main() {
 	reportIntervalSec := flag.Int("r", 5, "report interval")
 	pollIntervalSec := flag.Int("p", 5, "poll interval")
 	secretKey := flag.String("k", "", "secret key")
-	rateLimit := flag.Int("l", 1, "secret key")
+	rateLimit := flag.Int("l", 1, "rate limit")
+	cryptoPublicKey := flag.String("crypto-key", "", "crypto public key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
@@ -57,12 +59,19 @@ func main() {
 		*rateLimit = valRateLimit
 	}
 
+	if os.Getenv("CRYPTO_KEY") != "" {
+		*cryptoPublicKey = os.Getenv("CRYPTO_KEY")
+	}
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(180) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 
-	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit))
+	publicCrypter, err := crypto.NewPublicCrypter(*cryptoPublicKey, sugar)
+	if err != nil {
+		sugar.Errorf("could not create crypter")
+	}
+	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
 	for range ctx.Done() {
 		sugar.Info("client shutting down")

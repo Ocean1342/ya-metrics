@@ -23,6 +23,7 @@ func (s *ChiServer) initRoutes() map[string]http.HandlerFunc {
 		"/value/":                       s.handler.GetByJSON,
 		"/ping":                         s.handler.Ping,
 		"/updates/":                     s.handler.Updates,
+		"/crypto":                       s.handler.CryptoGen,
 	}
 }
 
