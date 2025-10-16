@@ -1,11 +1,15 @@
 package crypto
 
 import (
+	"crypto/rand"
 	"crypto/rsa"
+	"crypto/sha256"
 	"crypto/x509"
 	"encoding/pem"
 	"fmt"
 	"go.uber.org/zap"
+	"io"
+	"net/http"
 	"os"
 )
 
@@ -23,6 +27,39 @@ func NewPrivateCrypter(privateKeyFilePath string, log *zap.SugaredLogger) (*Priv
 		privateKey: key,
 		log:        log,
 	}, nil
+}
+
+func (p *PrivateCrypter) DecryptHTTPRequest(req *http.Request) ([]byte, error) {
+	encryptedBody, err := io.ReadAll(req.Body)
+	if err != nil {
+		return nil, fmt.Errorf("failed to read request body: %w", err)
+	}
+	defer req.Body.Close()
+	if len(encryptedBody) == 0 {
+		return nil, nil
+	}
+	var decryptedData []byte
+	decryptedData, err = decryptData(p.privateKey, encryptedBody)
+	if err != nil {
+		return nil, fmt.Errorf("decryption failed: %w", err)
+	}
+	return decryptedData, nil
+}
+
+// decryptData расшифровывает данные с использованием RSA-OAEP
+func decryptData(privateKey *rsa.PrivateKey, encryptedData []byte) ([]byte, error) {
+	decrypted, err := rsa.DecryptOAEP(
+		sha256.New(),
+		rand.Reader,
+		privateKey,
+		encryptedData,
+		nil,
+	)
+	if err != nil {
+		return nil, fmt.Errorf("RSA decryption failed: %w", err)
+	}
+
+	return decrypted, nil
 }
 
 func loadPrivateKeyFromFile(filename string) (*rsa.PrivateKey, error) {
