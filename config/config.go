@@ -16,6 +16,7 @@ type Config struct {
 	DBURL            string            `json:"db_url"`
 	SecretKey        string            `json:"secret_key"`
 	ProfilingEnabled bool              `json:"profiling_enabled"`
+	CryptoKey        string            `json:"crypto_key"`
 }
 
 type PermStoreOptions struct {
@@ -33,6 +34,7 @@ func New() *Config {
 	secretKey := flag.String("k", "", "secret key")
 	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
 	dbURL := flag.String("d", "", "server address")
+	cryptoPrivateKey := flag.String("crypto-key", "", "crypto private key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*hostStr = os.Getenv("ADDRESS")
@@ -53,7 +55,9 @@ func New() *Config {
 	if os.Getenv("KEY") != "" {
 		*secretKey = os.Getenv("KEY")
 	}
-
+	if os.Getenv("CRYPTO_KEY") != "" {
+		*cryptoPrivateKey = os.Getenv("CRYPTO_KEY")
+	}
 	restoreEnv := os.Getenv("RESTORE")
 	if restoreEnv != "" {
 		switch strings.ToLower(restoreEnv) {
@@ -92,5 +96,6 @@ func New() *Config {
 		DBURL:            *dbURL,
 		SecretKey:        *secretKey,
 		ProfilingEnabled: *profileEnabled,
+		CryptoKey:        *cryptoPrivateKey,
 	}
 }
