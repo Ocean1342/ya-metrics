@@ -47,6 +47,9 @@ func main() {
 	}
 	go shutDown(permStore)
 	privateCrypter, err := crypto.NewPrivateCrypter(cfg.CryptoKey, sugar)
+	if err != nil {
+		sugar.Errorf("could not create private crypter")
+	}
 	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar, privateCrypter))
 	s.Start()
