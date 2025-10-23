@@ -3,9 +3,11 @@ package config
 import (
 	"flag"
 	"fmt"
+	"go.uber.org/zap"
 	"os"
 	"strconv"
 	"strings"
+	filecfg "ya-metrics/internal/server/config"
 )
 
 type Config struct {
@@ -25,7 +27,7 @@ type PermStoreOptions struct {
 	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
 }
 
-func New() *Config {
+func New(log *zap.SugaredLogger) *Config {
 	hostStr := flag.String("a", "localhost:8080", "server address")
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
@@ -35,7 +37,11 @@ func New() *Config {
 	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
 	dbURL := flag.String("d", "", "server address")
 	cryptoPrivateKey := flag.String("crypto-key", "", "crypto private key")
+	cfgFilePath := flag.String("config", "", "crypto public key")
 	flag.Parse()
+	if os.Getenv("CONFIG") != "" {
+		*cfgFilePath = os.Getenv("CONFIG")
+	}
 	if os.Getenv("ADDRESS") != "" {
 		*hostStr = os.Getenv("ADDRESS")
 	}
@@ -84,6 +90,37 @@ func New() *Config {
 		*profileEnabled = true
 	}
 
+	if *cfgFilePath != "" {
+		cfg, err := filecfg.ParseFromFile(*cfgFilePath)
+		if err != nil {
+			log.Errorf("wrong config file path: %s", *cfgFilePath)
+		} else {
+			if *hostStr == "" {
+				*hostStr = cfg.HostStr
+			}
+			if *storeInterval == 0 {
+				*storeInterval = cfg.StoreInterval
+			}
+			if *fileStoragePath == "" {
+				*fileStoragePath = cfg.FileStoragePath
+			}
+			if restoreOnStart == nil {
+				restoreOnStart = &cfg.RestoreOnStart
+			}
+			if profileEnabled == nil {
+				profileEnabled = &cfg.ProfileEnabled
+			}
+			if *secretKey == "" {
+				*secretKey = cfg.SecretKey
+			}
+			if *dbURL == "" {
+				*dbURL = cfg.DBURL
+			}
+			if *cryptoPrivateKey == "" {
+				*cryptoPrivateKey = cfg.CryptoPrivateKey
+			}
+		}
+	}
 	return &Config{
 		Port:       8080,
 		Host:       "localhost",

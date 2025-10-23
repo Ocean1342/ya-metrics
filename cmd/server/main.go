@@ -30,7 +30,7 @@ var (
 func main() {
 	fmt.Printf("Build version:=%s, Build date=%s Build commit=%s\n", buildVersion, buildDate, buildCommit)
 	initLogger()
-	cfg := config.New()
+	cfg := config.New(sugar)
 	var permStore *permstore.PermStore
 	var gaugeStorage server_storage.GaugeStorage
 	var countStorage server_storage.CounterStorage
