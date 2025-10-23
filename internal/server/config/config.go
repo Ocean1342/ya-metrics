@@ -12,7 +12,7 @@ type AgentConfig struct {
 	RestoreOnStart   bool   `json:"restore_on_start"`
 	ProfileEnabled   bool   `json:"profile_enabled"`
 	SecretKey        string `json:"secret_key"`
-	DbURL            string `json:"db_url"`
+	DBURL            string `json:"db_url"`
 	CryptoPrivateKey string `json:"crypto_private_key"`
 }
 

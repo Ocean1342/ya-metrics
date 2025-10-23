@@ -105,16 +105,16 @@ func New(log *zap.SugaredLogger) *Config {
 				*fileStoragePath = cfg.FileStoragePath
 			}
 			if restoreOnStart == nil {
-				*restoreOnStart = cfg.RestoreOnStart
+				restoreOnStart = &cfg.RestoreOnStart
 			}
 			if profileEnabled == nil {
-				*profileEnabled = cfg.ProfileEnabled
+				profileEnabled = &cfg.ProfileEnabled
 			}
 			if *secretKey == "" {
 				*secretKey = cfg.SecretKey
 			}
 			if *dbURL == "" {
-				*dbURL = cfg.DbURL
+				*dbURL = cfg.DBURL
 			}
 			if *cryptoPrivateKey == "" {
 				*cryptoPrivateKey = cfg.CryptoPrivateKey
