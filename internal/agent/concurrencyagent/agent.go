@@ -57,6 +57,7 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 	select {
 	default:
 	case <-ctx.Done():
+		//graceful shutdown
 		c.logger.Infof("worker № %d stopped by closing context", order)
 		return
 	}
