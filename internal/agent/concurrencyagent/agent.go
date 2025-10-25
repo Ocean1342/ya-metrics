@@ -68,7 +68,6 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 		c.logger.Errorf("err on send request:%s", err)
 		return
 	}
-	//TODO: ВОПРОС : тут падает vet test, но действительно ли нужно закрывать тело ответа, если оно не используется?
 	defer resp.Body.Close()
 	c.mu.Lock()
 	if c.counter < c.RateLimit {

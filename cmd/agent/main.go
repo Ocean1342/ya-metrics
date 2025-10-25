@@ -106,6 +106,7 @@ func main() {
 	}
 	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	//graceful shutdown
 	for range ctx.Done() {
 		sugar.Info("client shutting down")
 		return
