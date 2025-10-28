@@ -69,7 +69,7 @@ func main() {
 func shutDown(permStore *permstore.PermStore, pg *sql.DB, server server.YaServeable) {
 	l := sugar.Named("graceful_shutdown")
 	sigCh := make(chan os.Signal, 1)
-	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)
+	signal.Notify(sigCh, os.Interrupt)
 	v, ok := <-sigCh
 	l.Info("starting graceful shutdown")
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
