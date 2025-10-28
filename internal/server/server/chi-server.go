@@ -1,7 +1,10 @@
 package server
 
 import (
+	"context"
+	"errors"
 	"github.com/go-chi/chi/v5"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/pprof"
 	"ya-metrics/config"
@@ -10,8 +13,8 @@ import (
 
 type Middleware func(http.Handler) http.Handler
 
-func NewChiServeable(cfg *config.Config, handler *handlers.Handler, middlewares []Middleware) YaServeable {
-	return &ChiServer{Config: cfg, handler: handler, middlewares: middlewares}
+func NewChiServeable(cfg *config.Config, handler *handlers.Handler, middlewares []Middleware, log *zap.SugaredLogger) YaServeable {
+	return &ChiServer{Config: cfg, handler: handler, middlewares: middlewares, log: log}
 }
 
 func (s *ChiServer) initRoutes() map[string]http.HandlerFunc {
@@ -23,13 +26,16 @@ func (s *ChiServer) initRoutes() map[string]http.HandlerFunc {
 		"/value/":                       s.handler.GetByJSON,
 		"/ping":                         s.handler.Ping,
 		"/updates/":                     s.handler.Updates,
+		"/crypto":                       s.handler.CryptoGen,
 	}
 }
 
 type ChiServer struct {
 	Config      *config.Config
+	log         *zap.SugaredLogger
 	handler     *handlers.Handler
 	middlewares []Middleware
+	srv         *http.Server
 }
 
 func (s *ChiServer) Start() {
@@ -56,8 +62,21 @@ func (s *ChiServer) Start() {
 	for route, handler := range s.initRoutes() {
 		router.HandleFunc(route, handler)
 	}
-	err := http.ListenAndServe(s.Config.HostString, router)
+	srv := http.Server{
+		Addr:    s.Config.HostString,
+		Handler: router,
+	}
+	s.srv = &srv
+	err := srv.ListenAndServe()
+	if err != nil && !errors.Is(err, http.ErrServerClosed) {
+		s.log.Errorf("server err: %v", err.Error())
+	}
+}
+
+func (s *ChiServer) Stop(ctx context.Context) {
+	s.log.Info("shutting down server")
+	err := s.srv.Shutdown(ctx)
 	if err != nil {
-		panic(err)
+		s.log.Error("could not stop server")
 	}
 }

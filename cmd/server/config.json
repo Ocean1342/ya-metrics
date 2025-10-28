@@ -1,0 +1,10 @@
+{
+  "host_str": "localhost:8080",
+  "store_interval": 5,
+  "file_storage_path": "./server/permstore/perm_storage.local.json",
+  "restore_on_start": false,
+  "profile_enabled": false,
+  "secret_key": "",
+  "db_url": "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable",
+  "crypto_private_key": "./crypto/private_key.pem"
+}

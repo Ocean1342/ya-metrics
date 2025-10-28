@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 	"ya-metrics/internal/agent/concurrencyagent"
+	"ya-metrics/internal/agent/config"
+	"ya-metrics/pkg/crypto"
 )
 
 var (
@@ -27,8 +29,14 @@ func main() {
 	reportIntervalSec := flag.Int("r", 5, "report interval")
 	pollIntervalSec := flag.Int("p", 5, "poll interval")
 	secretKey := flag.String("k", "", "secret key")
-	rateLimit := flag.Int("l", 1, "secret key")
+	rateLimit := flag.Int("l", 1, "rate limit")
+	cryptoPublicKey := flag.String("crypto-key", "", "crypto public key")
+	cfgFilePath := flag.String("config", "", "crypto public key")
 	flag.Parse()
+
+	if os.Getenv("CONFIG") != "" {
+		*cfgFilePath = os.Getenv("CONFIG")
+	}
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
 	}
@@ -57,13 +65,48 @@ func main() {
 		*rateLimit = valRateLimit
 	}
 
+	if os.Getenv("CRYPTO_KEY") != "" {
+		*cryptoPublicKey = os.Getenv("CRYPTO_KEY")
+	}
+
+	if *cfgFilePath != "" {
+		cfg, err := config.ParseFromFile(*cfgFilePath)
+		if err != nil {
+			sugar.Errorf("wrong config file path: %s", *cfgFilePath)
+		} else {
+			if *host == "" {
+				*host = cfg.Host
+			}
+			if *reportIntervalSec == 0 {
+				*reportIntervalSec = cfg.ReportIntervalSec
+			}
+			if *pollIntervalSec == 0 {
+				*pollIntervalSec = cfg.PollIntervalSec
+			}
+			if *secretKey == "" {
+				*secretKey = cfg.SecretKey
+			}
+			if *rateLimit == 0 {
+				*rateLimit = cfg.RateLimit
+			}
+			if *cryptoPublicKey == "" {
+				*cryptoPublicKey = cfg.CryptoPublicKey
+			}
+		}
+	}
+
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(180) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 
-	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit))
+	publicCrypter, err := crypto.NewPublicCrypter(*cryptoPublicKey, sugar)
+	if err != nil {
+		sugar.Errorf("could not create crypter")
+	}
+	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	//graceful shutdown
 	for range ctx.Done() {
 		sugar.Info("client shutting down")
 		return
