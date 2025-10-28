@@ -1,23 +1,33 @@
 package main
 
 import (
-	"bytes"
 	"context"
 	"flag"
 	"fmt"
-	"io"
+	"github.com/hashicorp/go-retryablehttp"
+	"go.uber.org/zap"
 	"net/http"
 	"os"
 	"strconv"
 	"time"
-	"ya-metrics/internal/agent/mgen"
-	"ya-metrics/pkg/mdata"
+	"ya-metrics/internal/agent/concurrencyagent"
+)
+
+var (
+	sugar        *zap.SugaredLogger
+	buildVersion string = "N\\A"
+	buildDate    string = "N\\A"
+	buildCommit  string = "N\\A"
 )
 
 func main() {
+	fmt.Printf("Build version:=%s, Build date=%s Build commit=%s\n", buildVersion, buildDate, buildCommit)
+	initLogger()
 	host := flag.String("a", "localhost:8080", "agent host")
-	reportIntervalSec := flag.Int("r", 10, "report interval")
-	pollIntervalSec := flag.Int("p", 2, "poll interval")
+	reportIntervalSec := flag.Int("r", 5, "report interval")
+	pollIntervalSec := flag.Int("p", 5, "poll interval")
+	secretKey := flag.String("k", "", "secret key")
+	rateLimit := flag.Int("l", 1, "secret key")
 	flag.Parse()
 	if os.Getenv("ADDRESS") != "" {
 		*host = os.Getenv("ADDRESS")
@@ -36,108 +46,43 @@ func main() {
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
+	if os.Getenv("KEY") != "" {
+		*secretKey = os.Getenv("KEY")
+	}
+	if os.Getenv("RATE_LIMIT") != "" {
+		valRateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+		if err != nil {
+			panic(err)
+		}
+		*rateLimit = valRateLimit
+	}
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
-	timeToWork := time.Duration(120) * time.Second
+	timeToWork := time.Duration(180) * time.Second
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 
-	for {
-		select {
-		case <-ctx.Done():
-			fmt.Println("shutting down")
-			return
-		default:
-			run(srvrAddr, int64(*pollIntervalSec), *reportIntervalSec)
-		}
-
+	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit))
+	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	for range ctx.Done() {
+		sugar.Info("client shutting down")
+		return
 	}
 }
 
-func run(srvrAddr string, pCount int64, reportIntervalSec int) {
-	func() {
-		buffer := bytes.NewBuffer([]byte(""))
-		for _, m := range mgen.GenerateGaugeMetrics() {
-			url := prepareURLGauge(srvrAddr, m.GetType(), m.GetName(), m.GetValue())
-			req, err := requestPrepare(url, http.MethodPost, buffer)
-			if err != nil {
-				fmt.Println(err)
-			}
-			resp := sendRequest(req)
-			if resp == nil {
-				fmt.Println("response is nil")
-				continue
-			}
-			defer resp.Body.Close()
-			err = responseAnalyze(resp)
-			if err != nil {
-				fmt.Println(err)
-			}
-		}
-		pCount++
-		c := mdata.NewSimpleCounter("PollCount", pCount)
-		url := prepareURLCounter(srvrAddr, c.GetType(), c.GetName(), c.GetValue())
-		req, err := requestPrepare(url, http.MethodPost, buffer)
-		//TODO: добавить обработку ошибок
-		if err != nil {
-			fmt.Println(err)
-		}
-		resp := sendRequest(req)
-		if resp == nil {
-			fmt.Println("response is nil")
-			return
-		}
-		defer resp.Body.Close()
-		err = responseAnalyze(resp)
-		if err != nil {
-			fmt.Println(err)
-		}
-		//sleep
-		time.Sleep(time.Second * time.Duration(reportIntervalSec))
-	}()
-}
-
-func prepareURLCounter(base, typeName, name string, value int64) string {
-	return base + fmt.Sprintf("/update/%s/%s/%d", typeName, name, value)
-}
-
-func prepareURLGauge(base, typeName, name string, value float64) string {
-	return base + fmt.Sprintf("/update/%s/%s/%v", typeName, name, value)
-}
-
-func requestPrepare(url string, method string, reader io.Reader) (*http.Request, error) {
-	req, err := http.NewRequest(method, url, reader)
+func initLogger() {
+	logger, err := zap.NewProduction()
 	if err != nil {
-		fmt.Println("Error creating request:", err)
-		panic(err)
+		panic("could not start logger")
 	}
-	req.Header.Set("Content-Type", "text/plain")
-	return req, nil
+	defer logger.Sync()
+	sugar = logger.Sugar()
 }
 
-func sendRequest(req *http.Request) *http.Response {
-	client := &http.Client{}
-	resp, err := client.Do(req)
-	if err != nil {
-		fmt.Println(err)
-		return nil
-	}
-	return resp
-}
-
-// TODO: доделать анализ ответа
-func responseAnalyze(resp *http.Response) error {
-	if resp == nil {
-		return fmt.Errorf("nil response")
-	}
-	// Читаем ответ
-	defer resp.Body.Close()
-	_, err := io.ReadAll(resp.Body)
-	if err != nil {
-		fmt.Println("Error reading response:", err)
-		return fmt.Errorf("error reading response")
-	}
-
-	fmt.Println("Response Status:", resp.Status)
-	return nil
+func initClient() *http.Client {
+	retryClient := retryablehttp.NewClient()
+	retryClient.RetryMax = 3
+	retryClient.RetryWaitMin = 1 * time.Second
+	retryClient.RetryWaitMax = 5 * time.Second
+	return retryClient.StandardClient()
 }

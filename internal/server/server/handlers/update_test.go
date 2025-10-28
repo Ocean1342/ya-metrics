@@ -1,7 +1,8 @@
-package shandler
+package handlers
 
 import (
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -26,9 +27,10 @@ type reqParams struct {
 // TODO: Вопрос: нужно ли в тесте хендлера проверять запись в сторадж?
 func TestUpdateHandler(t *testing.T) {
 	path := "http://localhost:8080"
+	logger, _ := zap.NewProduction()
 	f := Fields{
 		AvailableMetricsTypes: mdata.InitMetrics(),
-		gaugeStorage:          server_storage.NewSimpleGaugeStorage(),
+		gaugeStorage:          server_storage.NewSimpleGaugeStorage(logger.Sugar()),
 		countStorage:          server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter),
 	}
 	tests := []struct {
@@ -82,12 +84,12 @@ func TestUpdateHandler(t *testing.T) {
 			//новый ридер
 			nr := httptest.NewRecorder()
 			//дёрнуть хендлер
-			uh := &UpdateHandler{
-				AvailableMetricsTypes: tt.fields.AvailableMetricsTypes,
+			uh := &Handler{
+				availableMetricsTypes: tt.fields.AvailableMetricsTypes,
 				gaugeStorage:          tt.fields.gaugeStorage,
 				countStorage:          tt.fields.countStorage,
 			}
-			uh.ServeHTTP(nr, req)
+			uh.Update(nr, req)
 			//nr получить результ
 			res := nr.Result()
 			defer res.Body.Close()

@@ -1,4 +1,4 @@
-package shandler
+package handlers
 
 import (
 	"fmt"
@@ -6,50 +6,50 @@ import (
 	"strings"
 )
 
-func (uh *UpdateHandler) validateUpdateRequest(ur *UpdateRequest) error {
+func (h *Handler) validateUpdateRequest(ur *UpdateRequest) error {
 	if ur == nil {
 		return fmt.Errorf("nil UpdateRequest")
 	}
-	err := uh.validateMetricTypeName(ur)
+	err := h.validateMetricTypeName(ur)
 	if err != nil {
 		return err
 	}
 	//TODO: add validate name
-	err = uh.validateMetricName(ur)
+	err = h.validateMetricName(ur)
 	if err != nil {
 		return err
 	}
 	//TODO: validate value?
 
-	err = uh.validateMetricValueNotEmpty(ur)
+	err = h.validateMetricValueNotEmpty(ur)
 	if err != nil {
 		return err
 	}
 	return nil
 }
 
-func (uh *UpdateHandler) validateMetricTypeName(ur *UpdateRequest) error {
-	if !uh.AvailableMetricsTypes.Isset(ur.Type) {
+func (h *Handler) validateMetricTypeName(ur *UpdateRequest) error {
+	if !h.availableMetricsTypes.Isset(ur.Type) {
 		return fmt.Errorf("no available metrics type found")
 	}
 	return nil
 }
 
-func (uh *UpdateHandler) validateMetricName(ur *UpdateRequest) error {
+func (h *Handler) validateMetricName(ur *UpdateRequest) error {
 	if strings.TrimSpace(ur.Name) == "" {
 		return fmt.Errorf("no available metrics type found")
 	}
 	return nil
 }
 
-func (uh *UpdateHandler) validateMetricValueNotEmpty(ur *UpdateRequest) error {
+func (h *Handler) validateMetricValueNotEmpty(ur *UpdateRequest) error {
 	if strings.TrimSpace(ur.Value) == "" {
 		return fmt.Errorf("no available metrics type found")
 	}
 	return nil
 }
 
-func (uh *UpdateHandler) validateRequestHeader(req *http.Request) error {
+func (h *Handler) validateRequestHeader(req *http.Request) error {
 	//TODO: тест 3ий итерации
 	//if strings.EqualFold(req.Header.Get("Content-Type"), "text/plain") {
 	//	return nil

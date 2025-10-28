@@ -1,7 +1,8 @@
-package shandler
+package handlers
 
 import (
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"testing"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/pkg/mdata"
@@ -63,18 +64,19 @@ func TestUpdateHandler_validateUpdateRequest(t *testing.T) {
 	}
 }
 
-func initUpdateHandler(fields Fields) *UpdateHandler {
-	return &UpdateHandler{
-		AvailableMetricsTypes: fields.AvailableMetricsTypes,
+func initUpdateHandler(fields Fields) *Handler {
+	return &Handler{
+		availableMetricsTypes: fields.AvailableMetricsTypes,
 		gaugeStorage:          fields.gaugeStorage,
 		countStorage:          fields.countStorage,
 	}
 }
 
 func initHandlerFields() Fields {
+	logger, _ := zap.NewProduction()
 	f := Fields{
 		AvailableMetricsTypes: mdata.InitMetrics(),
-		gaugeStorage:          server_storage.NewSimpleGaugeStorage(),
+		gaugeStorage:          server_storage.NewSimpleGaugeStorage(logger.Sugar()),
 		countStorage:          server_storage.NewSimpleCountStorage(mdata.NewSimpleCounter),
 	}
 	return f

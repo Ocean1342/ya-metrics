@@ -1,7 +1,96 @@
 package config
 
+import (
+	"flag"
+	"fmt"
+	"os"
+	"strconv"
+	"strings"
+)
+
 type Config struct {
-	Port       int    `json:"port"`
-	Host       string `json:"host"`
-	HostString string `json:"host_str"`
+	Port             int               `json:"port"`
+	Host             string            `json:"host"`
+	HostString       string            `json:"host_str"`
+	PermStoreOptions *PermStoreOptions `json:"perm_store_options"`
+	DBURL            string            `json:"db_url"`
+	SecretKey        string            `json:"secret_key"`
+	ProfilingEnabled bool              `json:"profiling_enabled"`
+}
+
+type PermStoreOptions struct {
+	StoreInterval   int64  `env:"STORE_INTERVAL" default:"300"`
+	FileStoragePath string `env:"FILE_STORAGE_PATH" default:"perm_storage.local.json"`
+	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
+}
+
+func New() *Config {
+	hostStr := flag.String("a", "localhost:8080", "server address")
+	storeInterval := flag.Int64("i", 300, "server address")
+	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
+	restoreOnStart := flag.Bool("r", false, "restore storage from file")
+	profileEnabled := flag.Bool("pprof", true, "enable profiling")
+	secretKey := flag.String("k", "", "secret key")
+	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
+	dbURL := flag.String("d", "", "server address")
+	flag.Parse()
+	if os.Getenv("ADDRESS") != "" {
+		*hostStr = os.Getenv("ADDRESS")
+	}
+	if os.Getenv("STORE_INTERVAL") != "" {
+		v, err := strconv.Atoi(os.Getenv("STORE_INTERVAL"))
+		if err != nil {
+			panic(err)
+		}
+		*storeInterval = int64(v)
+	}
+	if os.Getenv("FILE_STORAGE_PATH") != "" {
+		*fileStoragePath = os.Getenv("FILE_STORAGE_PATH")
+	}
+	if os.Getenv("DATABASE_DSN") != "" {
+		*dbURL = os.Getenv("DATABASE_DSN")
+	}
+	if os.Getenv("KEY") != "" {
+		*secretKey = os.Getenv("KEY")
+	}
+
+	restoreEnv := os.Getenv("RESTORE")
+	if restoreEnv != "" {
+		switch strings.ToLower(restoreEnv) {
+		case "true":
+			*restoreOnStart = true
+		case "false":
+			*restoreOnStart = false
+		default:
+			panic(fmt.Sprintf("invalid RESTORE env value: %s", restoreEnv))
+		}
+		*restoreOnStart = true
+	}
+
+	profileEnabledEnv := os.Getenv("PROFILING_ENABLED")
+	if profileEnabledEnv != "" {
+		switch strings.ToLower(profileEnabledEnv) {
+		case "true":
+			*profileEnabled = true
+		case "false":
+			*profileEnabled = false
+		default:
+			panic(fmt.Sprintf("invalid profileEnabled env value: %s", profileEnabledEnv))
+		}
+		*profileEnabled = true
+	}
+
+	return &Config{
+		Port:       8080,
+		Host:       "localhost",
+		HostString: *hostStr,
+		PermStoreOptions: &PermStoreOptions{
+			StoreInterval:   *storeInterval,
+			FileStoragePath: *fileStoragePath,
+			RestoreOnStart:  *restoreOnStart,
+		},
+		DBURL:            *dbURL,
+		SecretKey:        *secretKey,
+		ProfilingEnabled: *profileEnabled,
+	}
 }

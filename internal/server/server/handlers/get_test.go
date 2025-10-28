@@ -1,7 +1,8 @@
-package shandler
+package handlers
 
 import (
 	"github.com/stretchr/testify/assert"
+	"go.uber.org/zap"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -11,6 +12,7 @@ import (
 
 func TestGetHandler_ServeHTTP(t *testing.T) {
 	t.Skip(" почему то урл не парсится , т.е. typeName в хендлере пустой")
+	logger, _ := zap.NewProduction()
 	type Fields struct {
 		AvailableMetricsTypes mdata.AvailableMetricsTypes
 		gaugeStorage          srvrstrg.GaugeStorage
@@ -27,7 +29,7 @@ func TestGetHandler_ServeHTTP(t *testing.T) {
 	path := "http://localhost:8080"
 	f := Fields{
 		AvailableMetricsTypes: mdata.InitMetrics(),
-		gaugeStorage:          srvrstrg.NewSimpleGaugeStorage(),
+		gaugeStorage:          srvrstrg.NewSimpleGaugeStorage(logger.Sugar()),
 		countStorage:          srvrstrg.NewSimpleCountStorage(mdata.NewSimpleCounter),
 	}
 	_ = f.gaugeStorage.Set(mdata.NewSimpleGauge("one", 1))
@@ -52,12 +54,12 @@ func TestGetHandler_ServeHTTP(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			gh := &GetHandler{
-				AvailableMetricsTypes: tt.fields.AvailableMetricsTypes,
+			gh := &Handler{
+				availableMetricsTypes: tt.fields.AvailableMetricsTypes,
 				gaugeStorage:          tt.fields.gaugeStorage,
 				countStorage:          tt.fields.countStorage,
 			}
-			gh.ServeHTTP(tt.args.w, tt.args.r)
+			gh.Get(tt.args.w, tt.args.r)
 			res := tt.args.w.Result()
 			defer res.Body.Close()
 			assert.Equal(t, tt.want.code, res.StatusCode)
