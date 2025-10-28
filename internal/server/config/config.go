@@ -5,7 +5,7 @@ import (
 	"os"
 )
 
-type AgentConfig struct {
+type FromFIleConfig struct {
 	HostStr          string `json:"host_str"`
 	StoreInterval    int64  `json:"store_interval"`
 	FileStoragePath  string `json:"file_storage_path"`
@@ -16,12 +16,12 @@ type AgentConfig struct {
 	CryptoPrivateKey string `json:"crypto_private_key"`
 }
 
-func ParseFromFile(filePath string) (*AgentConfig, error) {
+func ParseFromFile(filePath string) (*FromFIleConfig, error) {
 	bytes, err := os.ReadFile(filePath)
 	if err != nil {
 		return nil, err
 	}
-	var config AgentConfig
+	var config FromFIleConfig
 	err = json.Unmarshal(bytes, &config)
 	if err != nil {
 		return nil, err
