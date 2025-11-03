@@ -97,7 +97,8 @@ func main() {
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(180) * time.Second
-	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
+	ctxWithValue := context.WithValue(context.Background(), "host", *host)
+	ctx, cancel := context.WithDeadline(ctxWithValue, time.Now().Add(timeToWork))
 	defer cancel()
 
 	publicCrypter, err := crypto.NewPublicCrypter(*cryptoPublicKey, sugar)
