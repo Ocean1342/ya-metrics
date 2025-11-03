@@ -21,12 +21,23 @@ func (h *Handler) CryptoGen(w http.ResponseWriter, r *http.Request) {
 	}
 	privateKey, err := rsa.GenerateKey(rand.Reader, 2048)
 	if err != nil {
+		h.log.Errorf("error generating private key: %v", err)
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
 
-	publicKeyString, _ := publicKeyToString(&privateKey.PublicKey)
-	privateKeyString, _ := privateKeyToString(privateKey)
+	publicKeyString, err := publicKeyToString(&privateKey.PublicKey)
+	if err != nil {
+		h.log.Errorf("error generating public key: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	privateKeyString, err := privateKeyToString(privateKey)
+	if err != nil {
+		h.log.Errorf("error on convert private key to string: %v", err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 	data, err := json.Marshal(CryptoKeysResponse{PrivateKey: privateKeyString, PublicKey: publicKeyString})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

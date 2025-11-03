@@ -34,39 +34,39 @@ func main() {
 	cfgFilePath := flag.String("config", "", "crypto public key")
 	flag.Parse()
 
-	if os.Getenv("CONFIG") != "" {
-		*cfgFilePath = os.Getenv("CONFIG")
+	if v, ok := os.LookupEnv("CONFIG"); ok {
+		*cfgFilePath = v
 	}
-	if os.Getenv("ADDRESS") != "" {
-		*host = os.Getenv("ADDRESS")
+	if v, ok := os.LookupEnv("ADDRESS"); ok {
+		*host = v
 	}
-	if os.Getenv("REPORT_INTERVAL") != "" {
-		envValReportIntervalSec, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	if v, ok := os.LookupEnv("REPORT_INTERVAL"); ok {
+		envValReportIntervalSec, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*reportIntervalSec = envValReportIntervalSec
 	}
-	if os.Getenv("POLL_INTERVAL") != "" {
-		valEnvPollIntervalSec, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	if v, ok := os.LookupEnv("POLL_INTERVAL"); ok {
+		valEnvPollIntervalSec, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
-	if os.Getenv("KEY") != "" {
-		*secretKey = os.Getenv("KEY")
+	if v, ok := os.LookupEnv("KEY"); ok {
+		*secretKey = v
 	}
-	if os.Getenv("RATE_LIMIT") != "" {
-		valRateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	if v, ok := os.LookupEnv("RATE_LIMIT"); ok {
+		valRateLimit, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*rateLimit = valRateLimit
 	}
 
-	if os.Getenv("CRYPTO_KEY") != "" {
-		*cryptoPublicKey = os.Getenv("CRYPTO_KEY")
+	if v, ok := os.LookupEnv("CRYPTO_KEY"); ok {
+		*cryptoPublicKey = v
 	}
 
 	if *cfgFilePath != "" {
@@ -103,15 +103,16 @@ func main() {
 
 	publicCrypter, err := crypto.NewPublicCrypter(*cryptoPublicKey, sugar)
 	if err != nil {
-		sugar.Errorf("could not create crypter")
+		sugar.Errorf("could not create crypter. Abort server init.")
+		cancel()
 	}
 	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
 	//graceful shutdown
-	for range ctx.Done() {
-		sugar.Info("client shutting down")
-		return
-	}
+	<-ctx.Done()
+	sugar.Info("client shutting down")
+	return
+
 }
 
 func initLogger() {
