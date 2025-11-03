@@ -34,7 +34,10 @@ var (
 
 func main() {
 	fmt.Printf("Build version:=%s, Build date=%s Build commit=%s\n", buildVersion, buildDate, buildCommit)
-	initLogger()
+	err := initLogger()
+	if err != nil {
+		log.Fatal(err)
+	}
 	cfg := config.New(sugar)
 	var permStore *permstore.PermStore
 	var gaugeStorage server_storage.GaugeStorage
@@ -97,10 +100,10 @@ func shutDown(permStore *permstore.PermStore, pg *sql.DB, server server.YaServea
 	}
 }
 
-func initLogger() {
+func initLogger() error {
 	logger, err := zap.NewProduction()
 	if err != nil {
-		panic("could not start logger")
+		return fmt.Errorf("could not start logger")
 	}
 	defer func(logger *zap.Logger) {
 		err := logger.Sync()
@@ -109,4 +112,5 @@ func initLogger() {
 		}
 	}(logger)
 	sugar = logger.Sugar()
+	return nil
 }

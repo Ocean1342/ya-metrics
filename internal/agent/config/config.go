@@ -2,6 +2,7 @@ package config
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 )
 
@@ -17,12 +18,12 @@ type AgentConfig struct {
 func ParseFromFile(filePath string) (*AgentConfig, error) {
 	bytes, err := os.ReadFile(filePath)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 	var config AgentConfig
 	err = json.Unmarshal(bytes, &config)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("failed to read config file: %w", err)
 	}
 	return &config, nil
 }
