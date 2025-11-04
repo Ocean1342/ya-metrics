@@ -13,6 +13,7 @@ import (
 	"ya-metrics/internal/agent/concurrencyagent"
 	"ya-metrics/internal/agent/config"
 	"ya-metrics/pkg/crypto"
+	"ya-metrics/pkg/netcmprr"
 )
 
 var (
@@ -97,7 +98,7 @@ func main() {
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(180) * time.Second
-	ctxWithValue := context.WithValue(context.Background(), "host", srvrAddr)
+	ctxWithValue := context.WithValue(context.Background(), netcmprr.Host("host"), srvrAddr)
 	ctx, cancel := context.WithDeadline(ctxWithValue, time.Now().Add(timeToWork))
 	defer cancel()
 

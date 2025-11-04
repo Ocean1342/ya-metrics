@@ -10,6 +10,7 @@ import (
 	"sync"
 	"ya-metrics/internal/agent/runableagent"
 	"ya-metrics/pkg/crypto"
+	"ya-metrics/pkg/netcmprr"
 )
 
 type ConcurrencyAgent struct {
@@ -113,7 +114,7 @@ func (c *ConcurrencyAgent) requestFactory(ctx context.Context, srvrAddr string, 
 }
 
 func enrichRequest(ctx context.Context, sugar *zap.SugaredLogger, req *http.Request) *http.Request {
-	v := ctx.Value("host")
+	v := ctx.Value(netcmprr.Host("host"))
 	if v == nil {
 		sugar.Errorf("host key not found in context")
 		return req
