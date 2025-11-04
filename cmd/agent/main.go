@@ -97,7 +97,7 @@ func main() {
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
 	timeToWork := time.Duration(180) * time.Second
-	ctxWithValue := context.WithValue(context.Background(), "host", *host)
+	ctxWithValue := context.WithValue(context.Background(), "host", srvrAddr)
 	ctx, cancel := context.WithDeadline(ctxWithValue, time.Now().Add(timeToWork))
 	defer cancel()
 

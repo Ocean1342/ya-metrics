@@ -29,13 +29,13 @@ type PermStoreOptions struct {
 }
 
 func New(log *zap.SugaredLogger) *Config {
-	hostStr := flag.String("a", "localhost:8080", "server address")
+	hostStr := flag.String("a", "127.0.0.1:8080", "server address")
 	storeInterval := flag.Int64("i", 300, "server address")
 	fileStoragePath := flag.String("f", "./perm_storage.json", "server address")
 	restoreOnStart := flag.Bool("r", false, "restore storage from file")
 	profileEnabled := flag.Bool("pprof", true, "enable profiling")
 	secretKey := flag.String("k", "", "secret key")
-	//dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
+	//dbURL - dbDefaultString := "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable"
 	dbURL := flag.String("d", "", "server address")
 	cryptoPrivateKey := flag.String("crypto-key", "", "crypto private key")
 	cfgFilePath := flag.String("config", "", "crypto public key")
@@ -142,5 +142,6 @@ func New(log *zap.SugaredLogger) *Config {
 		SecretKey:        *secretKey,
 		ProfilingEnabled: *profileEnabled,
 		CryptoKey:        *cryptoPrivateKey,
+		TrustedSubnet:    *trustedSubnet,
 	}
 }
