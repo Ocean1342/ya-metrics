@@ -1,0 +1,8 @@
+{
+  "host": "localhost:8080",
+  "report_interval_sec": 12,
+  "poll_interval_sec": 5,
+  "secret_key": "",
+  "rate_limit": 1,
+  "crypto_public_key": "/home/ant/go-work/ya-metrics/crypto/public_key.pem"
+}

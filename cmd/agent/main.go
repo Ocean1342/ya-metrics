@@ -11,6 +11,8 @@ import (
 	"strconv"
 	"time"
 	"ya-metrics/internal/agent/concurrencyagent"
+	"ya-metrics/internal/agent/config"
+	"ya-metrics/pkg/crypto"
 )
 
 var (
@@ -27,34 +29,70 @@ func main() {
 	reportIntervalSec := flag.Int("r", 5, "report interval")
 	pollIntervalSec := flag.Int("p", 5, "poll interval")
 	secretKey := flag.String("k", "", "secret key")
-	rateLimit := flag.Int("l", 1, "secret key")
+	rateLimit := flag.Int("l", 1, "rate limit")
+	cryptoPublicKey := flag.String("crypto-key", "", "crypto public key")
+	cfgFilePath := flag.String("config", "", "crypto public key")
 	flag.Parse()
-	if os.Getenv("ADDRESS") != "" {
-		*host = os.Getenv("ADDRESS")
+
+	if v, ok := os.LookupEnv("CONFIG"); ok {
+		*cfgFilePath = v
 	}
-	if os.Getenv("REPORT_INTERVAL") != "" {
-		envValReportIntervalSec, err := strconv.Atoi(os.Getenv("REPORT_INTERVAL"))
+	if v, ok := os.LookupEnv("ADDRESS"); ok {
+		*host = v
+	}
+	if v, ok := os.LookupEnv("REPORT_INTERVAL"); ok {
+		envValReportIntervalSec, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*reportIntervalSec = envValReportIntervalSec
 	}
-	if os.Getenv("POLL_INTERVAL") != "" {
-		valEnvPollIntervalSec, err := strconv.Atoi(os.Getenv("POLL_INTERVAL"))
+	if v, ok := os.LookupEnv("POLL_INTERVAL"); ok {
+		valEnvPollIntervalSec, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*pollIntervalSec = valEnvPollIntervalSec
 	}
-	if os.Getenv("KEY") != "" {
-		*secretKey = os.Getenv("KEY")
+	if v, ok := os.LookupEnv("KEY"); ok {
+		*secretKey = v
 	}
-	if os.Getenv("RATE_LIMIT") != "" {
-		valRateLimit, err := strconv.Atoi(os.Getenv("RATE_LIMIT"))
+	if v, ok := os.LookupEnv("RATE_LIMIT"); ok {
+		valRateLimit, err := strconv.Atoi(v)
 		if err != nil {
 			panic(err)
 		}
 		*rateLimit = valRateLimit
+	}
+
+	if v, ok := os.LookupEnv("CRYPTO_KEY"); ok {
+		*cryptoPublicKey = v
+	}
+
+	if *cfgFilePath != "" {
+		cfg, err := config.ParseFromFile(*cfgFilePath)
+		if err != nil {
+			sugar.Errorf("wrong config file path: %s", *cfgFilePath)
+		} else {
+			if *host == "" {
+				*host = cfg.Host
+			}
+			if *reportIntervalSec == 0 {
+				*reportIntervalSec = cfg.ReportIntervalSec
+			}
+			if *pollIntervalSec == 0 {
+				*pollIntervalSec = cfg.PollIntervalSec
+			}
+			if *secretKey == "" {
+				*secretKey = cfg.SecretKey
+			}
+			if *rateLimit == 0 {
+				*rateLimit = cfg.RateLimit
+			}
+			if *cryptoPublicKey == "" {
+				*cryptoPublicKey = cfg.CryptoPublicKey
+			}
+		}
 	}
 
 	srvrAddr := fmt.Sprintf("http://%s", *host)
@@ -62,12 +100,16 @@ func main() {
 	ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(timeToWork))
 	defer cancel()
 
-	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit))
-	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
-	for range ctx.Done() {
-		sugar.Info("client shutting down")
-		return
+	publicCrypter, err := crypto.NewPublicCrypter(*cryptoPublicKey, sugar)
+	if err != nil {
+		sugar.Errorf("could not create crypter. Abort server init.")
+		cancel()
 	}
+	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
+	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	//graceful shutdown
+	<-ctx.Done()
+	sugar.Info("client shutting down")
 }
 
 func initLogger() {

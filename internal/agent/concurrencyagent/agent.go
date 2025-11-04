@@ -9,6 +9,7 @@ import (
 	"runtime"
 	"sync"
 	"ya-metrics/internal/agent/runableagent"
+	"ya-metrics/pkg/crypto"
 )
 
 type ConcurrencyAgent struct {
@@ -18,15 +19,17 @@ type ConcurrencyAgent struct {
 	reqCh     chan *http.Request
 	logger    *zap.SugaredLogger
 	client    *http.Client
+	crypter   *crypto.PublicCrypter
 }
 
-func New(logger *zap.SugaredLogger, client *http.Client, rateLimit uint) *ConcurrencyAgent {
+func New(logger *zap.SugaredLogger, client *http.Client, rateLimit uint, crypter *crypto.PublicCrypter) *ConcurrencyAgent {
 	return &ConcurrencyAgent{
 		RateLimit: rateLimit,
 		counter:   rateLimit,
 		reqCh:     make(chan *http.Request, rateLimit),
 		logger:    logger,
 		client:    client,
+		crypter:   crypter,
 	}
 }
 
@@ -54,15 +57,18 @@ func (c *ConcurrencyAgent) send(ctx context.Context, req *http.Request, order in
 	select {
 	default:
 	case <-ctx.Done():
+		//graceful shutdown
 		c.logger.Infof("worker № %d stopped by closing context", order)
 		return
+	}
+	if c.crypter.Enabled {
+		req = c.crypter.CryptRequest(req)
 	}
 	resp, err := c.client.Do(req)
 	if err != nil && !errors.Is(err, io.EOF) {
 		c.logger.Errorf("err on send request:%s", err)
 		return
 	}
-	//TODO: ВОПРОС : тут падает vet test, но действительно ли нужно закрывать тело ответа, если оно не используется?
 	defer resp.Body.Close()
 	c.mu.Lock()
 	if c.counter < c.RateLimit {
