@@ -111,8 +111,6 @@ func main() {
 	//graceful shutdown
 	<-ctx.Done()
 	sugar.Info("client shutting down")
-	return
-
 }
 
 func initLogger() {
