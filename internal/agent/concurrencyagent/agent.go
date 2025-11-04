@@ -10,6 +10,7 @@ import (
 	"sync"
 	"ya-metrics/internal/agent/runableagent"
 	"ya-metrics/pkg/crypto"
+	"ya-metrics/pkg/netcmprr"
 )
 
 type ConcurrencyAgent struct {
@@ -46,6 +47,7 @@ func (c *ConcurrencyAgent) Run(ctx context.Context, srvrAddr string, pCount int6
 			if c.counter == 0 {
 				c.counter = c.RateLimit - 1
 			}
+			req = enrichRequest(ctx, c.logger, req)
 			go c.send(ctx, req, int(c.counter))
 			c.mu.Unlock()
 			c.logger.Infof("count requests: %d", countIncomeReq)
@@ -109,4 +111,23 @@ func (c *ConcurrencyAgent) requestFactory(ctx context.Context, srvrAddr string, 
 			return
 		}
 	}
+}
+
+func enrichRequest(ctx context.Context, sugar *zap.SugaredLogger, req *http.Request) *http.Request {
+	v := ctx.Value(netcmprr.Host("host"))
+	if v == nil {
+		sugar.Errorf("host key not found in context")
+		return req
+	}
+	host, ok := v.(string)
+	if !ok {
+		sugar.Errorf("host value has wrong type: %T, value: %v", v, v)
+		return req
+	}
+	if host == "" {
+		sugar.Errorf("host value is empty string")
+		return req
+	}
+	req.Header.Set("X-Real-IP", host)
+	return req
 }

@@ -14,6 +14,7 @@ type FromFIleConfig struct {
 	SecretKey        string `json:"secret_key"`
 	DBURL            string `json:"db_url"`
 	CryptoPrivateKey string `json:"crypto_private_key"`
+	TrustedSubnet    string `json:"trusted_subnet"`
 }
 
 func ParseFromFile(filePath string) (*FromFIleConfig, error) {

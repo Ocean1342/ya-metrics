@@ -9,6 +9,7 @@ import (
 
 func InitMiddlewares(cfg *config.Config, sugar *zap.SugaredLogger, crypter *crypto.PrivateCrypter) []server.Middleware {
 	return []server.Middleware{
+		TrustableMiddleware(sugar, cfg.TrustedSubnet),
 		RSADecryptableMiddleware(crypter, sugar),
 		CryptoMiddleware(cfg.SecretKey, sugar),
 		NewLogResponseMiddleware(sugar),
