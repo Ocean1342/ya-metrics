@@ -25,7 +25,7 @@ type MetricsServer struct {
 }
 
 func (ms *MetricsServer) UpdateMetric(_ context.Context, req *proto.UpdateMetricRequest) (*proto.UpdateMetricResponse, error) {
-	var resp *proto.UpdateMetricResponse
+	resp := &proto.UpdateMetricResponse{}
 	ur := &handlers.UpdateRequest{
 		Type:  req.Metric.Type,
 		Name:  req.Metric.Name,
@@ -41,7 +41,7 @@ func (ms *MetricsServer) UpdateMetric(_ context.Context, req *proto.UpdateMetric
 }
 
 func (ms *MetricsServer) GetMetric(_ context.Context, req *proto.GetMetricRequest) (*proto.GetMetricResponse, error) {
-	var resp *proto.GetMetricResponse
+	resp := &proto.GetMetricResponse{}
 	if !ms.availableMetricsTypes.Isset(req.GetType()) {
 		resp.Error = fmt.Sprintf("%s is not available metric type", req.GetType())
 		return resp, nil
