@@ -20,12 +20,19 @@ type Config struct {
 	ProfilingEnabled bool              `json:"profiling_enabled"`
 	CryptoKey        string            `json:"crypto_key"`
 	TrustedSubnet    string            `json:"trusted_subnet"`
+	GPRCServerConfig GPRCServerConfig  `json:"gprc_server_config"`
 }
 
 type PermStoreOptions struct {
 	StoreInterval   int64  `env:"STORE_INTERVAL" default:"300"`
 	FileStoragePath string `env:"FILE_STORAGE_PATH" default:"perm_storage.local.json"`
 	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
+}
+
+type GPRCServerConfig struct {
+	Enabled bool   `json:"enabled"`
+	Network string `json:"network"`
+	Addr    string `json:"addr"`
 }
 
 func New(log *zap.SugaredLogger) *Config {
@@ -40,6 +47,9 @@ func New(log *zap.SugaredLogger) *Config {
 	cryptoPrivateKey := flag.String("crypto-key", "", "crypto private key")
 	cfgFilePath := flag.String("config", "", "crypto public key")
 	trustedSubnet := flag.String("t", "", "trusted subnet string")
+	gRPCEnabled := flag.Bool("grpc", true, "enable gRPC server")
+	gRPCNetwork := flag.String("gn", "tcp", "gRPC network")
+	gRPCAddr := flag.String("ga", ":3200", "gRPC addr")
 	flag.Parse()
 	if os.Getenv("TRUSTED_SUBNET") != "" {
 		*trustedSubnet = os.Getenv("TRUSTED_SUBNET")
@@ -95,6 +105,21 @@ func New(log *zap.SugaredLogger) *Config {
 		*profileEnabled = true
 	}
 
+	//gRPC
+	if v, ok := os.LookupEnv("GRPC_ENABLED"); ok {
+		var err error
+		*gRPCEnabled, err = strconv.ParseBool(v)
+		if err != nil {
+			log.Errorf("invalid GRPC_ENABLED env value: %s set to false", v)
+			*gRPCEnabled = false
+		}
+	}
+	if v, ok := os.LookupEnv("GRPC_NETWORK"); ok {
+		*gRPCNetwork = v
+	}
+	if v, ok := os.LookupEnv("GRPC_ADDR"); ok {
+		*gRPCAddr = v
+	}
 	if *cfgFilePath != "" {
 		cfg, err := filecfg.ParseFromFile(*cfgFilePath)
 		if err != nil {
@@ -127,7 +152,22 @@ func New(log *zap.SugaredLogger) *Config {
 			if *trustedSubnet == "" {
 				*trustedSubnet = cfg.TrustedSubnet
 			}
+			if gRPCEnabled == nil {
+				gRPCEnabled = &cfg.GPRCEnabled
+			}
+			if *gRPCNetwork == "" {
+				*gRPCNetwork = cfg.GPRCNetwork
+			}
+			if *gRPCAddr == "" {
+				*gRPCAddr = cfg.GPRCAddr
+			}
 		}
+	}
+
+	gRPCServerCfg := GPRCServerConfig{
+		Enabled: *gRPCEnabled,
+		Network: *gRPCNetwork,
+		Addr:    *gRPCAddr,
 	}
 	return &Config{
 		Port:       8080,
@@ -143,5 +183,6 @@ func New(log *zap.SugaredLogger) *Config {
 		ProfilingEnabled: *profileEnabled,
 		CryptoKey:        *cryptoPrivateKey,
 		TrustedSubnet:    *trustedSubnet,
+		GPRCServerConfig: gRPCServerCfg,
 	}
 }
