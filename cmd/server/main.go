@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 	"ya-metrics/config"
+	"ya-metrics/internal/server/grpc"
 	"ya-metrics/internal/server/permstore"
 	"ya-metrics/internal/server/server"
 	server_storage "ya-metrics/internal/server/server-storage"
@@ -57,8 +58,10 @@ func main() {
 	if err != nil {
 		sugar.Errorf("could not create private crypter")
 	}
-	handler := handlers.New(gaugeStorage, countStorage, mdata.InitMetrics(), pg, sugar)
+	availableMetricsTypes := mdata.InitMetrics()
+	handler := handlers.New(gaugeStorage, countStorage, availableMetricsTypes, pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar, privateCrypter), sugar)
+	go grpc.Init(sugar, cfg.GPRCServerConfig, gaugeStorage, countStorage, availableMetricsTypes)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
