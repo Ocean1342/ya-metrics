@@ -17,11 +17,13 @@ import (
 )
 
 func New(
+	log *zap.SugaredLogger,
 	gaugeStorage server_storage.GaugeStorage,
 	countStorage server_storage.CounterStorage,
 	mTypes mdata.AvailableMetricsTypes,
 ) *MetricsServer {
 	return &MetricsServer{
+		log:                   log,
 		gaugeStorage:          gaugeStorage,
 		countStorage:          countStorage,
 		availableMetricsTypes: mTypes,
@@ -38,7 +40,7 @@ func Init(
 		sugar.Info("grpc server disabled")
 		return
 	}
-	server := New(gaugeStorage, countStorage, mTypes)
+	server := New(sugar, gaugeStorage, countStorage, mTypes)
 	listen, err := net.Listen(cfg.Network, cfg.Addr)
 	if err != nil {
 		log.Fatal(err)

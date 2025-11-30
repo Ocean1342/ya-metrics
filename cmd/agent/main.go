@@ -12,6 +12,7 @@ import (
 	"time"
 	"ya-metrics/internal/agent/concurrencyagent"
 	"ya-metrics/internal/agent/config"
+	"ya-metrics/internal/agent/grpc"
 	"ya-metrics/pkg/crypto"
 	"ya-metrics/pkg/netcmprr"
 )
@@ -33,8 +34,8 @@ func main() {
 	rateLimit := flag.Int("l", 1, "rate limit")
 	cryptoPublicKey := flag.String("crypto-key", "", "crypto public key")
 	cfgFilePath := flag.String("config", "", "crypto public key")
+	gRPCTarget := flag.String("g", ":3200", "grpc target")
 	flag.Parse()
-
 	if v, ok := os.LookupEnv("CONFIG"); ok {
 		*cfgFilePath = v
 	}
@@ -65,11 +66,12 @@ func main() {
 		}
 		*rateLimit = valRateLimit
 	}
-
 	if v, ok := os.LookupEnv("CRYPTO_KEY"); ok {
 		*cryptoPublicKey = v
 	}
-
+	if v, ok := os.LookupEnv("GRPC_TARGET"); ok {
+		*gRPCTarget = v
+	}
 	if *cfgFilePath != "" {
 		cfg, err := config.ParseFromFile(*cfgFilePath)
 		if err != nil {
@@ -93,6 +95,9 @@ func main() {
 			if *cryptoPublicKey == "" {
 				*cryptoPublicKey = cfg.CryptoPublicKey
 			}
+			if *gRPCTarget == "" {
+				*gRPCTarget = cfg.GRPCServerTarget
+			}
 		}
 	}
 
@@ -109,6 +114,7 @@ func main() {
 	}
 	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
 	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	go grpc.Run(ctx, sugar, *reportIntervalSec, *gRPCTarget)
 	//graceful shutdown
 	<-ctx.Done()
 	sugar.Info("client shutting down")

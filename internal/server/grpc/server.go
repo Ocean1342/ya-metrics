@@ -3,6 +3,7 @@ package grpc
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strconv"
@@ -13,6 +14,7 @@ import (
 )
 
 type MetricsServer struct {
+	log *zap.SugaredLogger
 	// availableMetricsTypes - available metrics types e.g. gauge, counter
 	availableMetricsTypes mdata.AvailableMetricsTypes
 	// gaugeStorage - gauge type storage
@@ -32,6 +34,8 @@ func (ms *MetricsServer) UpdateMetric(_ context.Context, req *proto.UpdateMetric
 	err := ms.saveData(ur)
 	if err != nil {
 		resp.Error = fmt.Sprintf("could not save data: %s", err)
+	} else {
+		ms.log.Infof("metric updated: %s by grpc", ur.Name)
 	}
 	return resp, nil
 }

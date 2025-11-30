@@ -13,6 +13,7 @@ type AgentConfig struct {
 	SecretKey         string `json:"secret_key"`
 	RateLimit         int    `json:"rate_limit"`
 	CryptoPublicKey   string `json:"crypto_public_key"`
+	GRPCServerTarget  string `json:"grpc_server_target"`
 }
 
 func ParseFromFile(filePath string) (*AgentConfig, error) {
