@@ -33,7 +33,7 @@ func New(logger *zap.SugaredLogger, client *http.Client, rateLimit uint, crypter
 	}
 }
 
-func (c *ConcurrencyAgent) Run(ctx context.Context, srvrAddr string, pCount int64, reportIntervalSec int, secretKey string) {
+func (c *ConcurrencyAgent) Run(ctx context.Context, srvrAddr string, pCount int64, reportIntervalSec int, secretKey string, ip string) {
 	go c.requestFactory(ctx, srvrAddr, pCount, reportIntervalSec, secretKey)
 
 	go func() {
@@ -46,6 +46,7 @@ func (c *ConcurrencyAgent) Run(ctx context.Context, srvrAddr string, pCount int6
 			if c.counter == 0 {
 				c.counter = c.RateLimit - 1
 			}
+			req = enrichRequest(req, ip)
 			go c.send(ctx, req, int(c.counter))
 			c.mu.Unlock()
 			c.logger.Infof("count requests: %d", countIncomeReq)
@@ -109,4 +110,9 @@ func (c *ConcurrencyAgent) requestFactory(ctx context.Context, srvrAddr string, 
 			return
 		}
 	}
+}
+
+func enrichRequest(req *http.Request, ip string) *http.Request {
+	req.Header.Set("X-Real-IP", ip)
+	return req
 }

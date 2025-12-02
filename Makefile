@@ -14,3 +14,9 @@ pprof_mem_server:
 
 pprof_diff:
 	pprof -top -diff_base=profiles/server/before/heap-under-pressure.out profiles/server/after/heap-under-pressure.out
+
+#генерация из прото файла
+generate:
+	protoc --go_out=. --go_opt=paths=source_relative \
+  	--go-grpc_out=. --go-grpc_opt=paths=source_relative \
+  	pkg/proto/contract.proto

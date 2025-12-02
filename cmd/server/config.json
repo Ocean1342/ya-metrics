@@ -6,5 +6,6 @@
   "profile_enabled": false,
   "secret_key": "",
   "db_url": "host=localhost port=5432 user=ya password=ya dbname=ya sslmode=disable",
-  "crypto_private_key": "./crypto/private_key.pem"
+  "crypto_private_key": "./crypto/private_key.pem",
+  "trusted_subnet": "192.168.1.0/24"
 }
