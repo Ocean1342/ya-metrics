@@ -6,6 +6,7 @@ import (
 	"fmt"
 	_ "github.com/jackc/pgx/v5/stdlib"
 	"go.uber.org/zap"
+	"golang.org/x/sync/errgroup"
 	"log"
 	_ "net/http/pprof"
 	"os"
@@ -61,35 +62,48 @@ func main() {
 	availableMetricsTypes := mdata.InitMetrics()
 	handler := handlers.New(gaugeStorage, countStorage, availableMetricsTypes, pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar, privateCrypter), sugar)
-	go grpc.Init(sugar, cfg.GRPCServerConfig, gaugeStorage, countStorage, availableMetricsTypes)
+	grpcServer := grpc.New(sugar, cfg.GRPCServerConfig, gaugeStorage, countStorage, availableMetricsTypes)
+	grpcServer.Run()
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {
 		defer wg.Done()
-		shutDown(permStore, pg, s)
+		shutDown(permStore, pg, s, grpcServer)
 	}()
 	s.Start()
 	wg.Wait()
 }
 
-func shutDown(permStore *permstore.PermStore, pg *sql.DB, server server.YaServeable) {
+func shutDown(permStore *permstore.PermStore, pg *sql.DB, server server.YaServeable, grpcServer *grpc.MetricsServer) {
 	l := sugar.Named("graceful_shutdown")
 	sigCh := make(chan os.Signal, 1)
 	signal.Notify(sigCh, os.Interrupt)
 	v, ok := <-sigCh
 	l.Info("starting graceful shutdown")
 	ctx, cancel := context.WithTimeout(context.Background(), 25*time.Second)
-	server.Stop(ctx)
-	cancel()
-	err := permStore.Dump()
-	if err != nil {
-		panic(fmt.Sprintf("panic on put data to perm store on exit. err:%s", err))
-	}
-	if pg != nil {
-		err = pg.Close()
+	var g errgroup.Group
+	g.Go(func() error {
+		server.Stop(ctx)
+		cancel()
+		err := permStore.Dump()
 		if err != nil {
-			l.Warnf("could not close db conn. err: %v", err)
+			return fmt.Errorf("error put data to perm store on exit. err:%s", err)
 		}
+		if pg != nil {
+			err = pg.Close()
+			if err != nil {
+				l.Warnf("could not close db conn. err: %v", err)
+				return fmt.Errorf("could not close db conn. err: %s", err)
+			}
+		}
+		return nil
+	})
+	g.Go(func() error {
+		grpcServer.Stop()
+		return nil
+	})
+	if err := g.Wait(); err != nil {
+		panic(err)
 	}
 	if ok {
 		switch v {

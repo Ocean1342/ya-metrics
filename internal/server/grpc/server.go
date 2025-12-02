@@ -4,9 +4,11 @@ import (
 	"context"
 	"fmt"
 	"go.uber.org/zap"
+	"google.golang.org/grpc"
 	"google.golang.org/grpc/codes"
 	"google.golang.org/grpc/status"
 	"strconv"
+	"ya-metrics/config"
 	server_storage "ya-metrics/internal/server/server-storage"
 	"ya-metrics/internal/server/server/handlers"
 	"ya-metrics/pkg/mdata"
@@ -15,6 +17,7 @@ import (
 
 type MetricsServer struct {
 	log *zap.SugaredLogger
+	cfg config.GRPCServerConfig
 	// availableMetricsTypes - available metrics types e.g. gauge, counter
 	availableMetricsTypes mdata.AvailableMetricsTypes
 	// gaugeStorage - gauge type storage
@@ -22,6 +25,7 @@ type MetricsServer struct {
 	//countStorage - count type storage
 	countStorage server_storage.CounterStorage
 	proto.UnimplementedMetricsServer
+	server *grpc.Server
 }
 
 func (ms *MetricsServer) UpdateMetric(_ context.Context, req *proto.UpdateMetricRequest) (*proto.UpdateMetricResponse, error) {

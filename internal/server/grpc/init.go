@@ -6,9 +6,6 @@ import (
 	"google.golang.org/grpc"
 	"log"
 	"net"
-	"os"
-	"os/signal"
-	"syscall"
 	"time"
 	"ya-metrics/config"
 	server_storage "ya-metrics/internal/server/server-storage"
@@ -18,46 +15,43 @@ import (
 
 func New(
 	log *zap.SugaredLogger,
+	cfg config.GRPCServerConfig,
 	gaugeStorage server_storage.GaugeStorage,
 	countStorage server_storage.CounterStorage,
 	mTypes mdata.AvailableMetricsTypes,
 ) *MetricsServer {
 	return &MetricsServer{
 		log:                   log,
+		cfg:                   cfg,
 		gaugeStorage:          gaugeStorage,
 		countStorage:          countStorage,
 		availableMetricsTypes: mTypes,
 	}
 }
 
-func Init(
-	sugar *zap.SugaredLogger,
-	cfg config.GRPCServerConfig,
-	gaugeStorage server_storage.GaugeStorage,
-	countStorage server_storage.CounterStorage,
-	mTypes mdata.AvailableMetricsTypes) {
-	if !cfg.Enabled {
-		sugar.Info("grpc server disabled")
+func (ms *MetricsServer) Run() {
+	if !ms.cfg.Enabled {
+		ms.log.Info("grpc server disabled")
 		return
 	}
-	server := New(sugar, gaugeStorage, countStorage, mTypes)
-	listen, err := net.Listen(cfg.Network, cfg.Addr)
+	listen, err := net.Listen(ms.cfg.Network, ms.cfg.Addr)
 	if err != nil {
 		log.Fatal(err)
 	}
 	s := grpc.NewServer()
-	proto.RegisterMetricsServer(s, server)
-	stop := make(chan os.Signal, 1)
-	signal.Notify(stop, os.Interrupt, syscall.SIGTERM, syscall.SIGINT)
+	ms.server = s
+	proto.RegisterMetricsServer(s, ms)
 	go func() {
-		sugar.Infof("start gRPC server on port: %s", ":3200")
+		ms.log.Infof("start gRPC server on port: %s", ":3200")
 		if err := s.Serve(listen); err != nil {
-			sugar.Fatalf("could not start gRPC server, err: %v", err)
+			ms.log.Fatalf("could not start gRPC server, err: %v", err)
 		}
 	}()
-	<-stop
+}
+
+func (ms *MetricsServer) Stop() {
 	_, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
-	s.GracefulStop()
-	sugar.Info("gRPC server stopped")
+	ms.server.GracefulStop()
+	ms.log.Info("gRPC server stopped")
 }
