@@ -15,9 +15,9 @@ type FromFIleConfig struct {
 	DBURL            string `json:"db_url"`
 	CryptoPrivateKey string `json:"crypto_private_key"`
 	TrustedSubnet    string `json:"trusted_subnet"`
-	GPRCEnabled      bool   `json:"grpc_enabled"`
-	GPRCNetwork      string `json:"grpc_network"`
-	GPRCAddr         string `json:"grpc_addr"`
+	GRPCEnabled      bool   `json:"grpc_enabled"`
+	GRPCNetwork      string `json:"grpc_network"`
+	GRPCAddr         string `json:"grpc_addr"`
 }
 
 func ParseFromFile(filePath string) (*FromFIleConfig, error) {

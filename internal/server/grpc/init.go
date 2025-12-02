@@ -32,7 +32,7 @@ func New(
 
 func Init(
 	sugar *zap.SugaredLogger,
-	cfg config.GPRCServerConfig,
+	cfg config.GRPCServerConfig,
 	gaugeStorage server_storage.GaugeStorage,
 	countStorage server_storage.CounterStorage,
 	mTypes mdata.AvailableMetricsTypes) {

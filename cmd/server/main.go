@@ -61,7 +61,7 @@ func main() {
 	availableMetricsTypes := mdata.InitMetrics()
 	handler := handlers.New(gaugeStorage, countStorage, availableMetricsTypes, pg, sugar)
 	s := server.NewChiServeable(cfg, handler, middlewares.InitMiddlewares(cfg, sugar, privateCrypter), sugar)
-	go grpc.Init(sugar, cfg.GPRCServerConfig, gaugeStorage, countStorage, availableMetricsTypes)
+	go grpc.Init(sugar, cfg.GRPCServerConfig, gaugeStorage, countStorage, availableMetricsTypes)
 	var wg sync.WaitGroup
 	wg.Add(1)
 	go func() {

@@ -20,7 +20,7 @@ type Config struct {
 	ProfilingEnabled bool              `json:"profiling_enabled"`
 	CryptoKey        string            `json:"crypto_key"`
 	TrustedSubnet    string            `json:"trusted_subnet"`
-	GPRCServerConfig GPRCServerConfig  `json:"gprc_server_config"`
+	GRPCServerConfig GRPCServerConfig  `json:"grpc_server_config"`
 }
 
 type PermStoreOptions struct {
@@ -29,7 +29,7 @@ type PermStoreOptions struct {
 	RestoreOnStart  bool   `env:"RESTORE" default:"false"`
 }
 
-type GPRCServerConfig struct {
+type GRPCServerConfig struct {
 	Enabled bool   `json:"enabled"`
 	Network string `json:"network"`
 	Addr    string `json:"addr"`
@@ -153,18 +153,18 @@ func New(log *zap.SugaredLogger) *Config {
 				*trustedSubnet = cfg.TrustedSubnet
 			}
 			if gRPCEnabled == nil {
-				gRPCEnabled = &cfg.GPRCEnabled
+				gRPCEnabled = &cfg.GRPCEnabled
 			}
 			if *gRPCNetwork == "" {
-				*gRPCNetwork = cfg.GPRCNetwork
+				*gRPCNetwork = cfg.GRPCNetwork
 			}
 			if *gRPCAddr == "" {
-				*gRPCAddr = cfg.GPRCAddr
+				*gRPCAddr = cfg.GRPCAddr
 			}
 		}
 	}
 
-	gRPCServerCfg := GPRCServerConfig{
+	gRPCServerCfg := GRPCServerConfig{
 		Enabled: *gRPCEnabled,
 		Network: *gRPCNetwork,
 		Addr:    *gRPCAddr,
@@ -183,6 +183,6 @@ func New(log *zap.SugaredLogger) *Config {
 		ProfilingEnabled: *profileEnabled,
 		CryptoKey:        *cryptoPrivateKey,
 		TrustedSubnet:    *trustedSubnet,
-		GPRCServerConfig: gRPCServerCfg,
+		GRPCServerConfig: gRPCServerCfg,
 	}
 }
