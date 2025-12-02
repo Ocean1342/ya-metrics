@@ -13,6 +13,7 @@ import (
 	"ya-metrics/internal/agent/concurrencyagent"
 	"ya-metrics/internal/agent/config"
 	"ya-metrics/internal/agent/grpc"
+	"ya-metrics/internal/agent/ip"
 	"ya-metrics/pkg/crypto"
 	"ya-metrics/pkg/netcmprr"
 )
@@ -113,7 +114,12 @@ func main() {
 		cancel()
 	}
 	cncrncyAgent := concurrencyagent.New(sugar, initClient(), uint(*rateLimit), publicCrypter)
-	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey)
+	ip, err := ip.GetLocalIP()
+	if err != nil {
+		sugar.Errorf("could not get local ip. Abort server init.")
+		ip = ""
+	}
+	cncrncyAgent.Run(ctx, srvrAddr, int64(*pollIntervalSec), *reportIntervalSec, *secretKey, ip)
 	go grpc.Run(ctx, sugar, *reportIntervalSec, *gRPCTarget)
 	//graceful shutdown
 	<-ctx.Done()
